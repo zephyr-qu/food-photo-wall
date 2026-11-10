@@ -36,6 +36,10 @@ npm test
 
 前端默认连 `localhost:8787`；离线演示改 `.env` 指向 mock（8788）。
 
+## 缘起
+
+想法来源自一位“美食家”：一张照片，一家店，一座城，一顿值得记住的饭。
+
 ## License
 
 MIT — 见 [LICENSE](./LICENSE)。
