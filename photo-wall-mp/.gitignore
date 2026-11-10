@@ -1,0 +1,68 @@
+# 依赖
+node_modules/
+.pnpm-store/
+
+# 构建产物
+dist/
+dist-web/
+dist-h5/
+.swc/
+*.tsbuildinfo
+
+# 缓存
+.cache/
+.taro/
+.parcel-cache/
+.eslintcache
+
+# Expo / RN
+.expo/
+.expo-shared/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+
+# 编辑器 / 系统
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# 日志
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# 微信开发者工具本地私有配置
+project.private.config.json
+
+# 环境变量：一律不进仓库（含团队共享的 .env 模板）。
+# 公开仓库请复制 .env.example 为 .env 后按需修改；个人差异写 .env.local。
+.env
+.env.*
+!.env.example
+
+# 调试截图
+.rn-shots/
+# tools/ 下的调试素材与其生成产物（_mock.html / _chk_* / _cmp_* 等）不入库；
+# 但 _mock_build.py / _mock_render.py 是工具源码，保留。
+tools/_mock.html
+tools/_mock_bg.jpg
+tools/_chk_*
+tools/_cmp_*
+__pycache__/
+*.pyc
+
+# Playwright / e2e 运行产物
+test-results/
+playwright-report/
+_taro-e2e-tmp/
+
+# Windows 保留设备名误产物（`> nul` 的 0 字节文件）
+nul

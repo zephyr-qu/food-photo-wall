@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "lib": ["ES2020", "DOM"],
+    "jsx": "react",
+    "strict": true,
+    "strictNullChecks": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    /* 本包 include 了 ../core/src，而 core 内部用显式 .ts 扩展名导入
+       （为了能用 node --test 直接跑源码）。这里同步打开，否则报 TS5097。 */
+    "allowImportingTsExtensions": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@photo-wall/core": ["../core/src/index.ts"]
+    },
+    "types": ["@tarojs/taro", "node"]
+  },
+  "include": ["src/**/*", "../core/src/**/*"],
+  "exclude": ["node_modules", "dist", "dist-h5", "dist-web", ".swc"]
+}

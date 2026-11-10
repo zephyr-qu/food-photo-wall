@@ -1,0 +1,43 @@
+# 单仓库：两个工程以普通目录形式一起版本控制（不再有 gitlink）。
+#
+#   photo-wall-api/  接口契约（docs/api）+ 真后端（Hono）
+#   photo-wall-mp/   Taro 小程序 / H5 前端 + 离线 mock
+#
+# 两者都不是独立仓库，clone 本仓库即可拿到全部源码。
+
+# ---- 依赖 / 构建产物 ----
+node_modules/
+dist/
+dist-web/
+dist-h5/
+.swc/
+*.tsbuildinfo
+.eslintcache
+.taro/
+.cache/
+.expo/
+.expo-shared/
+web-build/
+
+# ---- 运行产物 / 本机数据（后端 var/、测试截图、日志）----
+var/
+*.log
+*.sqlite
+nul
+shot-*.png
+test-results/
+playwright-report/
+_taro-e2e-tmp/
+.rn-shots/
+
+# ---- 环境变量：私有值不入库，模板 .env.example 保留 ----
+.env
+.env.*
+!.env.example
+
+# ---- 编辑器 / 系统 ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

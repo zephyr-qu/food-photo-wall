@@ -1,0 +1,14 @@
+{
+  "name": "@photo-wall/server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "照片墙 mock 后端（零运行时依赖，Node 原生 ESM）",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

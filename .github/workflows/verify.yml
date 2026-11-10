@@ -1,0 +1,62 @@
+# CI：真后端（Hono/tsx）与前端（Taro）分开跑，工具链互不干扰。
+# 本仓库是单仓库：photo-wall-api/ 与 photo-wall-mp/ 都是普通目录，
+# clone 后即含全部源码，因此「前后端同源」用例（aggregate-parity / gen-data）能正常执行。
+name: verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  api:
+    name: api · typecheck + test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: photo-wall-api/server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: photo-wall-api/server/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+
+  frontend:
+    name: frontend · lint + typecheck + test + build
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: photo-wall-mp
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: photo-wall-mp/package-lock.json
+      - run: npm ci
+      # 这几步以前只写在 photo-wall-mp/.github/workflows/（不在仓库根的 .github 下，
+      # GitHub 从不执行），导致「lint 过、类型过、测试过，但 build 早就断了」仍显示绿。
+      - name: Lint
+        run: npm run lint
+      - name: 类型检查
+        run: npm run typecheck
+      - name: 单元测试
+        run: npm test
+      - name: 构建小程序 + 主包体积门禁
+        run: |
+          npm run build:weapp
+          npm run size
+      - name: 构建 H5
+        run: npm run build:h5

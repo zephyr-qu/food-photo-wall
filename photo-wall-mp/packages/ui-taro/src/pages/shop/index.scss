@@ -1,0 +1,359 @@
+/* ================================================================
+   店铺页样式
+
+   店名是这页唯一的大字，其它全部往下退。照片格的左右边缘
+   和页头文字对齐到同一条 gutter 线（32rpx）。
+   ================================================================ */
+@use '../../styles/tokens' as *;
+
+.sp {
+  background: $bg-app;
+  padding-bottom: calc(#{$s-6} + max(env(safe-area-inset-bottom), 24rpx));
+}
+
+/* 空态：文案与配色由 components/EmptyState 负责，这里只让它撑满整页 */
+.sp--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------------- 页头 ---------------- */
+/* 原型 .shop__head：padding 6px 16px 0 → 12rpx $gutter 0 */
+.sp__head {
+  padding: 12rpx $gutter 0;
+}
+
+/* 店名 + 地点同在一行：店名是唯一大字，地点退成右侧胶囊标签 */
+.sp__title-row {
+  display: flex;
+  align-items: baseline;
+  gap: $s-3;
+}
+
+.sp__name {
+  flex: 1;
+  min-width: 0;
+  font-family: $font-serif;
+  font-size: 56rpx;
+  font-weight: $w-semi;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  color: $text-1;
+  @include truncate;
+}
+
+/* 地点：店名右侧胶囊标签（tomato 小圆点暗示「定位」）。
+   单城显示城名，多城折叠成「N 城」，无城市则不渲染。 */
+.sp__loc {
+  flex: 0 0 auto;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+  padding: 10rpx 22rpx;
+  border-radius: $r-full;
+  background: $bg-element;
+  font-size: 23rpx;
+  letter-spacing: 0.02em;
+  color: $text-2;
+  white-space: nowrap;
+
+  &::before {
+    content: '';
+    width: 12rpx;
+    height: 12rpx;
+    border-radius: $r-full;
+    background: $accent;
+  }
+}
+
+/* 统计：等宽数字 + 更小标签的 metric 行。
+   数字半粗、标签更小，层级靠字号字重拉开（不动三档文字令牌）。 */
+.sp__stats {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: $s-4;
+  margin-top: 28rpx;
+}
+
+.sp__metric {
+  display: flex;
+  flex-direction: column;
+  gap: 4rpx;
+}
+
+/* 「均分」：推到统计行最右，正对右上角的地点胶囊。
+   margin-left:auto 把这一项吸到行尾；没有地点标签时它就是这一行最后一个。 */
+.sp__metric--avg {
+  margin-left: auto;
+}
+
+.sp__v {
+  font-family: $font-mono;
+  font-size: 40rpx;
+  font-weight: $w-semi;
+  color: $text-1;
+  line-height: 1;
+  @include tabular;
+}
+
+.sp__k {
+  font-size: 21rpx;
+  letter-spacing: 0.02em;
+  color: $text-3;
+}
+
+/* 首次 / 最近（原型 .shop__span：9px → 18rpx 等宽、字距 0.04em）
+   用 hairline 与上面统计分隔开 */
+.sp__span {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: $s-1 $s-2;
+  margin-top: 28rpx;
+  padding-top: 28rpx;
+  border-top: $hairline solid $bg-element;
+}
+
+.sp__span-k {
+  font-family: $font-mono;
+  font-size: 18rpx;
+  letter-spacing: 0.04em;
+  color: $text-3;
+}
+
+.sp__span-v {
+  font-family: $font-mono;
+  font-size: 18rpx;
+  letter-spacing: 0.04em;
+  color: $text-3;
+  @include tabular;
+}
+
+/* ---------------- 照片格 ---------------- */
+/* 2 列、5px 缝（原型 .shop__photos：gap 5px、padding 20px 14px 0） */
+.sp__photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  padding: 40rpx 28rpx 0;
+}
+
+/* 圆角 2px → 4rpx，和墙页同一套语言；正方形格子 */
+.sp__ph {
+  position: relative;
+  width: calc((100% - 10rpx) / 2);
+  height: 0;
+  padding-top: calc((100% - 10rpx) / 2);
+  overflow: hidden;
+  border-radius: 4rpx;
+  background: $bg-element;
+}
+
+.sp__img {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* 图注叠在照片左下角，跟墙上完全一致的手法
+   （原型 .shop__cap：padding 24px 8px 7px） */
+.sp__cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2rpx;
+  padding: 48rpx 16rpx 14rpx;
+  /* 同墙页：保证纯白照片上文字仍达 AA（详见 pages/wall/index.scss 的说明） */
+  background: linear-gradient(
+    to top,
+    $black-a9 0%,
+    $black-a6 60%,
+    $black-a1 100%
+  );
+}
+
+/* 菜名（原型 .shop__pheat：12px → 24rpx 600） */
+.sp__eat {
+  display: block;
+  font-size: 24rpx;
+  font-weight: $w-semi;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  color: #fff;
+  @include truncate;
+}
+
+/* 日期 · 评分（原型里是 9px 等宽小字 → 18rpx） */
+.sp__when {
+  display: block;
+  font-family: $font-mono;
+  font-size: 18rpx;
+  letter-spacing: 0.04em;
+  line-height: 1.3;
+  color: $white-a9;
+  @include truncate;
+}
+
+/* 图注评分星：踩在暗遮罩上，theme=dark 已是白点，这里只给一点上间距 */
+.sp__cap .rating--sm {
+  margin-top: 6rpx;
+}
+
+/* ---------------- 常点（渲染期按 eat 聚合的清单） ---------------- */
+.sp__freq {
+  margin-top: 36rpx;
+  padding-top: 28rpx;
+  border-top: $hairline solid $bg-element;
+}
+
+.sp__freq-h {
+  display: block;
+  margin: 0 0 16rpx;
+  font-size: 21rpx;
+  letter-spacing: 0.04em;
+  color: $text-3;
+}
+
+.sp__freq-row {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  padding: 16rpx 0;
+  border-bottom: $hairline solid $bg-element;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.sp__freq-eat {
+  flex: 0 0 auto;
+  max-width: 240rpx;
+  font-size: 28rpx;
+  color: $text-1;
+  @include truncate;
+}
+
+.sp__freq-bar {
+  flex: 1;
+  height: 8rpx;
+  border-radius: $r-full;
+  background: $bg-element;
+  overflow: hidden;
+}
+
+.sp__freq-fill {
+  height: 100%;
+  border-radius: $r-full;
+  background: $accent;
+}
+
+.sp__freq-n {
+  flex: 0 0 auto;
+  font-family: $font-mono;
+  font-size: 24rpx;
+  color: $text-3;
+  @include tabular;
+}
+
+/* ---------------- 接后端后新增 ----------------
+   店铺聚合改成接口后要请求，于是有了加载骨架与失败重试。 */
+.sp__sk {
+  border-radius: $r-full;
+  background: linear-gradient(
+    100deg,
+    $bg-element 30%,
+    $bg-element-hover 50%,
+    $bg-element 70%
+  );
+  background-size: 300% 100%;
+  animation: sp-sk 1.4s ease-in-out infinite;
+}
+
+.sp__sk--name {
+  width: 46%;
+  height: 56rpx;
+}
+
+.sp__sk--meta {
+  width: 28%;
+  height: 28rpx;
+  margin-top: $s-3;
+}
+
+@keyframes sp-sk {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+.sp__fail-t {
+  font-size: 28rpx;
+  color: $text-2;
+  margin-bottom: $s-4;
+}
+
+/* ---------------- 同名连锁店 / 翻页（A5 / A6） ---------------- */
+
+/* 城市 chip：店名下面一行，低调但可点 */
+.sp__cands {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-top: 16rpx;
+}
+
+.sp__cands-k {
+  font-family: $font-mono;
+  font-size: 20rpx;
+  letter-spacing: 0.08em;
+  color: $text-3;
+}
+
+.sp__cand {
+  padding: 10rpx 22rpx;
+  border-radius: $r-full;
+  background: $bg-element;
+  font-size: 24rpx;
+  color: $text-2;
+}
+
+.sp__cand--on {
+  background: $solid-bg;
+  color: $solid-fg;
+}
+
+/* 加载更多 / 到底提示：以前超过 100 条直接静默截断，数字和照片对不上 */
+.sp__more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80rpx;
+  margin: 24rpx $gutter 8rpx;
+  border-radius: $r-full;
+  background: $bg-element;
+  font-size: 26rpx;
+  color: $text-2;
+}
+
+.sp__more-hint {
+  display: block;
+  margin: 24rpx $gutter 8rpx;
+  font-size: 22rpx;
+  text-align: center;
+  color: $text-3;
+}

@@ -1,0 +1,56 @@
+{
+  "miniprogramRoot": "dist/",
+  "projectname": "photo-wall-taro",
+  "description": "X师傅美食记 · 照片墙",
+  "appid": "touristappid",
+  "setting": {
+    "es6": true,
+    "enhance": true,
+    "compileHotReLoad": false,
+    "postcss": false,
+    "minified": false,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "packNpmRelationList": [],
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "useCompilerPlugins": false,
+    "condition": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
+  },
+  "compileType": "miniprogram",
+  "libVersion": "2.32.3",
+  "srcMiniprogramRoot": "dist/",
+  "packOptions": {
+    "ignore": [
+      {
+        "value": "app.js.LICENSE.txt",
+        "type": "file"
+      },
+      {
+        "value": "vendors.js.LICENSE.txt",
+        "type": "file"
+      },
+      {
+        "value": "**/*.map",
+        "type": "glob"
+      },
+      {
+        "value": "project.config.json",
+        "type": "file"
+      }
+    ],
+    "include": []
+  },
+  "condition": {},
+  "simulatorPluginLibVersion": {},
+  "editorSetting": {}
+}

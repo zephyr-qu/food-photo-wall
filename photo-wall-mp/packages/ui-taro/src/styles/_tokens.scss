@@ -1,0 +1,164 @@
+/* ================================================================
+   设计令牌 · 照片墙
+
+   颜色一律取自 Radix UI Colors（sand / tomato / blackA / whiteA），
+   并按 Radix 的层级语义使用：
+
+     1–2   页面背景、次级背景
+     3–5   控件底色
+     6–8   边框、分隔线、聚焦环
+     9     实心填充（最高饱和度）
+     10    实心填充 hover
+     11    低对比文字（在 step 2 底上仍达 4.5:1）
+     12    高对比文字、深色实心填充
+
+   alpha 标尺（blackA / whiteA）只用于叠在照片上的遮罩。
+
+   单位：750rpx = 屏宽 = 390pt，所以 1rpx = 0.5px。
+   本文件里的 $hairline 即 0.5px 边框。
+   ================================================================ */
+
+/* ---------------- Radix · sand（浅色） ---------------- */
+$sand-1: #fdfdfc;
+$sand-2: #f9f9f8;
+$sand-3: #f1f0ef;
+$sand-4: #e9e8e6;
+$sand-5: #e2e1de;
+$sand-6: #dad9d6;
+$sand-7: #cfceca;
+$sand-8: #bcbbb5;
+$sand-9: #8d8d86;
+$sand-10: #82827c;
+$sand-11: #63635e;
+$sand-12: #21201c;
+
+/* ---------------- Radix · sand（深色） ---------------- */
+$sand-d-1: #111110;
+$sand-d-2: #191918;
+$sand-d-3: #222221;
+$sand-d-4: #2a2a28;
+$sand-d-5: #31312e;
+$sand-d-6: #3b3a37;
+$sand-d-7: #494844;
+$sand-d-8: #62605b;
+$sand-d-9: #6f6d66;
+$sand-d-10: #7c7b74;
+$sand-d-11: #b5b3ad;
+$sand-d-12: #eeeeec;
+
+/* ---------------- Radix · tomato ---------------- */
+$tomato-9: #e54d2e;
+$tomato-10: #dd4425;
+$tomato-11: #d13415;
+$tomato-d-7: #853a2d;
+$tomato-d-8: #ac4d39;
+$tomato-d-11: #ff977d;
+
+/* ---------------- Radix · alpha ---------------- */
+$black-a1: rgba(0, 0, 0, 0.05);
+$black-a2: rgba(0, 0, 0, 0.1);
+$black-a3: rgba(0, 0, 0, 0.15);
+$black-a4: rgba(0, 0, 0, 0.2);
+$black-a5: rgba(0, 0, 0, 0.3);
+$black-a6: rgba(0, 0, 0, 0.4);
+$black-a7: rgba(0, 0, 0, 0.5);
+$black-a8: rgba(0, 0, 0, 0.6);
+$black-a9: rgba(0, 0, 0, 0.7);
+$black-a10: rgba(0, 0, 0, 0.8);
+
+$white-a2: rgba(255, 255, 255, 0.1);
+$white-a3: rgba(255, 255, 255, 0.15);
+$white-a4: rgba(255, 255, 255, 0.2);
+$white-a5: rgba(255, 255, 255, 0.3);
+$white-a6: rgba(255, 255, 255, 0.4);
+$white-a7: rgba(255, 255, 255, 0.5);
+$white-a8: rgba(255, 255, 255, 0.6);
+$white-a9: rgba(255, 255, 255, 0.7);
+$white-a10: rgba(255, 255, 255, 0.8);
+$white-a11: rgba(255, 255, 255, 0.9);
+
+/* ---------------- 语义 · 浅色（墙 / 表单 / 店铺） ---------------- */
+$bg-app: $sand-1;
+$bg-subtle: $sand-2;
+$bg-element: $sand-3;
+$bg-element-hover: $sand-4;
+$border: $sand-6;
+$border-strong: $sand-7;
+$text-1: $sand-12;
+$text-2: $sand-11;
+/* 第三档文字（图注 / 元信息 / 计数）。
+   #fdfdfc 底上的对比度实测：sand-9 = 3.28、sand-10 = 3.80、sand-11 = 5.93。
+   第三档几乎全用在 12px 上，12px 不享受 AA 的"大字豁免"（需 ≥18.66px 粗体），
+   所以必须 ≥4.5:1 —— 只有 sand-11 达标。
+   代价：$text-3 与 $text-2 同值，层次只能靠字号和字重区分（12px vs 16px）。
+   想恢复三档视觉，正确做法是加粗字号阶梯，而不是把灰色调回去。 */
+$text-3: $sand-11;
+$solid-bg: $sand-12;
+$solid-fg: $sand-1;
+$on-solid-2: rgba(253, 253, 252, 0.62);
+$accent: $tomato-9;          /* 实心强调：评分星 */
+$accent-hover: $tomato-10;
+$accent-text: $tomato-11;    /* 文字强调：报错、危险操作 */
+
+/* ---------------- 语义 · 深色（详情页） ---------------- */
+$d-bg: $sand-d-1;
+$d-bg-element: $sand-d-3;
+$d-border: $sand-d-6;
+$d-border-strong: $sand-d-7;
+$d-text-1: $sand-d-12;
+$d-text-2: $sand-d-11;
+/* 同上：原 sand-d-9 对 $d-bg 只有 3.65:1，改用 sand-d-11 的 9.01:1 */
+$d-text-3: $sand-d-11;
+$d-solid-bg: $sand-d-12;
+$d-solid-fg: $sand-d-1;
+$d-accent: $tomato-9;
+$d-accent-text: $tomato-d-11;
+
+/* ---------------- 字号：只有三档 ---------------- */
+$t-micro: 24rpx;    /* 12px · 标签、图注、元信息。也是最小可用字号 */
+$t-base: 32rpx;     /* 16px · 正文、输入、按钮 */
+$t-display: 48rpx;  /* 24px · 页面主标题（菜名 / 店名） */
+
+$w-reg: 400;
+$w-med: 500;
+$w-semi: 600;
+
+/* ---------------- 间距：4 的倍数 ---------------- */
+$s-1: 8rpx;    /* 4px */
+$s-2: 16rpx;   /* 8px */
+$s-3: 24rpx;   /* 12px */
+$s-4: 32rpx;   /* 16px */
+$s-5: 48rpx;   /* 24px */
+$s-6: 64rpx;   /* 32px */
+$s-7: 96rpx;   /* 48px */
+
+/* 页面左右留白：所有页面的图片与文字都对齐到这一条 */
+$gutter: 32rpx;
+
+/* ---------------- 圆角 ---------------- */
+$r-photo: 8rpx;   /* 4px · 照片、缩略图 */
+$r-md: 16rpx;     /* 8px · 大按钮 */
+$r-full: 9999rpx; /* 胶囊 · chip、小按钮 */
+
+/* ---------------- 边框 ---------------- */
+$hairline: 1rpx;  /* 0.5px */
+
+/* ---------------- 字体 ---------------- */
+$font-sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB',
+  'Microsoft YaHei', sans-serif;
+/* 只有两处主标题用衬线：详情页菜名、店铺页店名。给「记了一顿饭」一点纸感。 */
+$font-serif: 'Songti SC', 'Noto Serif SC', 'Source Han Serif SC', serif;
+
+/* 等宽：随机一道浮窗的提示语、编号这类"技术感"小字用 */
+$font-mono: 'SF Mono', 'Menlo', 'Consolas', 'Roboto Mono', monospace;
+
+/* ---------------- 工具 ---------------- */
+@mixin truncate {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+@mixin tabular {
+  font-variant-numeric: tabular-nums;
+}

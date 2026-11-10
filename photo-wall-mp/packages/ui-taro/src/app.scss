@@ -1,0 +1,141 @@
+/* ================================================================
+   全局样式 · 照片墙
+
+   只放三样东西：页面底色、按钮、胶囊标签。
+   页面各自的布局留在各页面的 index.scss 里，避免这里变成杂物间。
+   （注意：不要在这段注释里写「星号 + 斜杠」，那会提前闭合注释）
+   ================================================================ */
+@use './styles/tokens' as *;
+
+page {
+  background: $bg-app;
+  color: $text-1;
+  font-family: $font-sans;
+  font-size: $t-base;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* H5 里没有 page 节点，底色的落点换成 body 与 Taro 的页面容器 */
+/* #ifdef h5 */
+body,
+.taro_router,
+.taro_page {
+  background: $bg-app;
+  color: $text-1;
+  font-family: $font-sans;
+  font-size: $t-base;
+  line-height: 1.5;
+}
+/* #endif */
+
+/* ---------------- 胶囊标签：筛选、开关 ----------------
+   对照原型 .chip：30px 高、12px 横向内边距、12px/600 字、6px 间距、
+   计数 mono 9px；选中态 = 墨底纸字。 */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  height: 60rpx;
+  padding: 0 24rpx;
+  /* 原型 .5px hair-2（ink 16%）：$border 与之同档 */
+  border: $hairline solid $border;
+  border-radius: $r-full;
+  font-size: 24rpx;
+  font-weight: $w-semi;
+  color: $text-2;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+/* 选中态：用最深的一档实心，和未选形成明确的两种状态 */
+.pill--on {
+  border-color: $solid-bg;
+  background: $solid-bg;
+  color: $solid-fg;
+}
+
+/* 标签里的小计数（城市条用）：mono 18rpx，比正文再弱一档 */
+.pill__n {
+  font-family: $font-mono;
+  font-size: 18rpx;
+  color: $text-3;
+  font-weight: $w-reg;
+  @include tabular;
+}
+
+.pill--on .pill__n {
+  color: $on-solid-2;
+}
+
+/* ---------------- 按钮 ---------------- */
+/* 实心：一屏只有一个，主操作 */
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  padding: 0 $s-5;
+  border-radius: $r-md;
+  font-size: $t-base;
+  font-weight: $w-semi;
+  color: $text-1;
+  background: $bg-element;
+  box-sizing: border-box;
+}
+
+.btn--primary {
+  background: $solid-bg;
+  color: $solid-fg;
+}
+
+/* 描边：次要操作。0.5px 描边，不叠任何阴影 */
+.btn--quiet {
+  border: $hairline solid $border-strong;
+  background: transparent;
+}
+
+/* ---------------- 原生输入控件 ---------------- */
+/* Taro 的 H5 构建会把裸标签选择器改写成自定义元素名（textarea → taro-textarea-core），
+   所以这里用 Taro 自己渲染出来的类名去命中真正的内层节点：
+   input 是 .weui-input，textarea 是 .taro-textarea。
+   两者都带着浏览器默认的白底、边框和右下角拖拽柄，浅底表单里会露出白方块。 */
+.weui-input,
+.taro-textarea {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  line-height: inherit;
+  resize: none;
+  outline: none;
+  appearance: none;
+}
+
+/* 占位文字：小程序走 placeholder-class（见各页 .field__ph），
+   H5 只能命中伪元素，两端各管一半。 */
+/* #ifdef h5 */
+.weui-input::placeholder,
+.taro-textarea::placeholder {
+  color: $text-3;
+  opacity: 1;
+}
+/* #endif */
+
+/* ---------------- 底部操作条 ---------------- */
+/* 固定在底部、贴安全区；顶部一条 0.5px 线分隔，不做渐隐和投影。
+   max(...,24rpx)：环境值为 0 的设备（手势条未上报）也留出呼吸。 */
+.bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  padding: $s-3 $gutter calc(#{$s-3} + max(env(safe-area-inset-bottom), 24rpx));
+  background: $bg-app;
+  border-top: $hairline solid $border;
+}

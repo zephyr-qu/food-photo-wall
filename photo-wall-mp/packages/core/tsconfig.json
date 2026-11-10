@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "lib": ["ES2020"],
+    "strict": true,
+    "strictNullChecks": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "declaration": false,
+    /* 允许 import 写显式 .ts 扩展名。
+       原因：单元测试用 `node --test` 直接跑 TS 源码（靠 Node 内置的类型剥离），
+       而 Node 的 ESM 解析要求相对导入必须带扩展名。
+       noEmit 已开，不需要产出 JS，所以这个开关是安全的。 */
+    "allowImportingTsExtensions": true
+  },
+  "include": ["src/**/*"]
+}

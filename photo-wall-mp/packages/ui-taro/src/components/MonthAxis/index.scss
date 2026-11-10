@@ -1,0 +1,63 @@
+/* ================================================================
+   右缘月份轴（照搬原型 photo-wall-h5 的 .axis）
+
+   状态只有三种：常态（极简小字）/ 当前月（加粗+墨色）/ 拖动气泡。
+   轴上永远不抢照片的注意力：字号 18rpx、无底色、只在当前月给一点墨色。
+   ================================================================ */
+
+.axis {
+  position: fixed;
+  right: 8rpx;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4rpx 0;
+  /* 触控友好：整条轴可点可拖，但不能挡住墙的滑动手势 */
+  touch-action: pan-y;
+}
+
+.axis__m {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 热区从 40×56rpx 提到 64×64rpx（32px）：
+     原尺寸宽 20px、高 28px，手指很难点准（B10）。
+     数字仍居中，轴向左多占 12rpx，不会压到照片主体。 */
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 20rpx;
+  /* 轴贴在照片上，文字需要有底才看得清 */
+  background: rgba(250, 250, 248, 0.72);
+  backdrop-filter: blur(6rpx);
+}
+
+.axis__t {
+  font-size: 18rpx;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  /* 平时淡到几乎看不见，只有当前月才实心 —— 轴是导航，不是装饰 */
+  color: rgba(28, 27, 25, 0.34);
+  transition: color 160ms ease, font-weight 160ms ease;
+}
+
+.axis__m--on .axis__t {
+  color: #1c1b19;
+  font-weight: 700;
+}
+
+/* 拖动/点击时浮出的「10 月」气泡：压在轴左侧，不遮照片主体 */
+.axis__bubble {
+  position: absolute;
+  right: 52rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 10rpx 20rpx;
+  border-radius: 12rpx;
+  background: rgba(28, 27, 25, 0.86);
+  color: #fafaf8;
+  font-size: 22rpx;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+}

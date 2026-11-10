@@ -1,0 +1,1099 @@
+openapi: 3.1.0
+info:
+  title: X师傅美食记 · 照片墙 API
+  version: 1.1.0
+  description: |
+    照片墙（Taro 小程序 + H5）后端接口契约。文字口径以 `photo-wall-api.md` 为准；
+    本文件用于导入 Apifox/Postman、生成客户端 SDK、做契约测试。
+    关键约束：`at` 固定 `YYYY-MM-DDTHH:mm`（本地墙钟、无时区）；列表按 `at` 倒序、
+    游标分页不重不漏；`photo=null` 表示"用预置配图"；`shop/city/note` 空值一律 `null`。
+    多图（v1.1）：一条记录至多 5 张照片 —— 响应 `photos[]`（有序，`photos[0]` = 封面，
+    旧字段 `photo`/`photoThumb`/`photoId` 恒等于封面），写接口用 `photoIds[]`
+    （PATCH 整体替换，不是追加）；上传接口不变，前端依次调最多 5 次 `POST /photos`。
+  contact:
+    name: 照片墙前端 / 后端联调
+servers:
+  - url: https://api.xshifu.example.com/v1
+    description: 生产
+  - url: https://staging-api.xshifu.example.com/v1
+    description: 预发
+  - url: https://dev-api.xshifu.example.com/v1
+    description: 开发
+security:
+  - bearerAuth: []
+tags:
+  - name: auth
+    description: 登录与令牌
+  - name: records
+    description: 记录读写与聚合
+  - name: shops
+    description: 店铺聚合
+  - name: photos
+    description: 照片上传
+  - name: geo
+    description: 城市字典
+  - name: system
+    description: 运维
+  - name: share
+    description: 分享开关与匿名分享读
+
+paths:
+  /healthz:
+    get:
+      tags: [system]
+      summary: 健康检查
+      security: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, const: ok }
+                  version: { type: string }
+                  time: { type: string, format: date-time }
+
+  /auth/wechat/login:
+    post:
+      tags: [auth]
+      summary: 小程序静默登录（code 换 token）
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [code]
+              properties:
+                code:
+                  type: string
+                  description: Taro.login() 返回的临时凭证，5 分钟有效、一次性
+                clientRequestId:
+                  type: string
+                  maxLength: 64
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthSession' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/anonymous:
+    post:
+      tags: [auth]
+      summary: 匿名设备登录（H5 / 开发环境）
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [deviceId]
+              properties:
+                deviceId:
+                  type: string
+                  maxLength: 64
+                clientRequestId:
+                  type: string
+                  maxLength: 64
+      responses:
+        '200':
+          description: 登录成功（同一 deviceId 幂等返回同一 userId）
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthSession' }
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      summary: 刷新 accessToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        '200':
+          description: 新令牌（refreshToken 轮换，旧的失效）
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [accessToken, refreshToken, expiresIn]
+                properties:
+                  accessToken: { type: string }
+                  refreshToken: { type: string }
+                  expiresIn: { type: integer, example: 7200 }
+                  tokenType: { type: string, const: Bearer }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /me:
+    get:
+      tags: [auth]
+      summary: 当前用户
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string, example: usr_01J9Z8ZK3M4N5P6Q7R8S9T0V }
+                  createdAt: { type: string, format: date-time }
+                  recordCount: { type: integer }
+                  photoCount: { type: integer }
+                  lastRecordAt:
+                    type: [string, 'null']
+                    example: '2026-10-09T12:30'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /records:
+    get:
+      tags: [records]
+      summary: 记录列表（游标分页，按吃的时间倒序）
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+        - name: cursorInclusive
+          in: query
+          schema: { type: boolean, default: false }
+          description: >-
+            cursor 的包含语义。false（默认）= 严格 `< cursor`，用于翻页（不重不漏）；
+            true = `<= cursor`，表示"从这条开始"，配 GET /records/months 的
+            firstCursorInclusive 做月轴跳转，避免漏掉当月最新一条。
+        - $ref: '#/components/parameters/City'
+        - $ref: '#/components/parameters/CityMissing'
+        - $ref: '#/components/parameters/Province'
+        - name: shopId
+          in: query
+          schema: { type: string }
+          description: 按店铺筛选（店铺页用）
+        - name: q
+          in: query
+          schema: { type: string, maxLength: 60 }
+          description: 菜名模糊搜索（P2，可暂不实现）
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/RecordList' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [records]
+      summary: 新建记录（贴一张 / 多图至多 5 张）
+      description: |
+        照片用 `photoIds`（最多 5 个、有序）：缺省 = 无照片，`[]` = 无照片。
+        旧字段 `photoId` 兼容期保留，仅当 `photoIds` 未出现时生效；
+        两者同传 → `photoIds` 优先，`photoId` 被忽略（不报错）。
+        校验失败（超 5 张 / 重复 id / id 不存在或不属于本人）→ `422`，`error.fields.photoIds`。
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          schema: { type: string, minLength: 16, maxLength: 64 }
+          description: 幂等键；24h 内同 key 重放返回首次结果
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RecordCreate' }
+      responses:
+        '201':
+          description: 创建成功
+          headers:
+            Idempotent-Replayed:
+              schema: { type: boolean }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Record' }
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+
+  /records/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { type: string }
+        example: rec_01J9Z8ZK3M4N5P6Q7R8S9T0V
+    get:
+      tags: [records]
+      summary: 单条记录
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Record' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [records]
+      summary: 局部更新（编辑；id/createdAt 不可改，at 可改）
+      description: |
+        照片用 `photoIds`（最多 5 个、有序），**整体替换**该记录的照片集合（不是追加）：
+        不传 = 照片不动；`[]` = 清空全部照片（回到预置配图）。
+        旧字段 `photoId` 兼容期保留，仅当 `photoIds` 未出现时生效；
+        两者同传 → `photoIds` 优先，`photoId` 被忽略（不报错）。
+      parameters:
+        - name: If-Match
+          in: header
+          schema: { type: integer }
+          description: 当前 version；不匹配返回 409
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RecordPatch' }
+      responses:
+        '200':
+          description: 更新后的完整记录
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Record' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+    delete:
+      tags: [records]
+      summary: 删除记录（幂等，已删除同样 204）
+      description: |
+        级联按**多张**判定：记录上的每一张照片，若不再被任何**未删除**记录引用 → 标记软删待回收；
+        仍被别的记录引用的那几张不删。
+      responses:
+        '204':
+          description: 已删除
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /records/{id}/restore:
+    post:
+      tags: [records]
+      summary: 撤销删除（软删恢复；P1 可选，对应原型 5 秒撤销）
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: 恢复后的完整记录（id/at 保持原值）
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Record' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: 不存在 / 不属于当前用户 / 不可恢复
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '410':
+          description: 超过撤销窗口
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /records/{id}/share:
+    post:
+      tags: [share]
+      summary: 开启分享，生成（或复用）不可猜的 shareToken
+      description: >-
+        幂等：已分享过则返回原 token（保证已发出去的卡片不失效）。
+        令牌为 32 字节随机 hex，不可由 id/时间推导。
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: 分享令牌
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [shareToken, sharedAt]
+                properties:
+                  shareToken: { type: string, pattern: '^sh_[0-9a-f]{64}$' }
+                  sharedAt: { type: integer, description: epoch ms }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: 记录不存在 / 不属于当前用户
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    delete:
+      tags: [share]
+      summary: 撤销分享（旧链接立即失效）
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204': { description: 已撤销（对未分享的记录同样 204，幂等） }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: 记录不存在 / 不属于当前用户
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /share/records/{id}:
+    get:
+      tags: [share]
+      summary: 匿名读一条被分享的记录（免鉴权，分享落地页用）
+      description: >-
+        必须给对 token；不匹配或缺 token 一律 404，响应与"记录不存在"完全相同
+        （不泄露存在性）。记录被软删则立即 404（删除即断链）。
+        restore 不会恢复 shareToken，要重新分享。
+      security: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: token
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: 分享的记录（只读）
+          headers:
+            Cache-Control:
+              schema: { type: string, example: no-store }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [record, shared]
+                properties:
+                  record: { $ref: '#/components/schemas/Record' }
+                  shared: { type: boolean, enum: [true] }
+        '404':
+          description: 记录不存在 / 已删除 / token 不匹配
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /records/random:
+    get:
+      tags: [records]
+      summary: 随机一道（可排除上一条）
+      parameters:
+        - $ref: '#/components/parameters/City'
+        - $ref: '#/components/parameters/CityMissing'
+        - $ref: '#/components/parameters/Province'
+        - name: excludeId
+          in: query
+          schema: { type: string }
+          description: 候选 > 1 时必须返回不同的一条
+      responses:
+        '200':
+          description: OK
+          headers:
+            Cache-Control:
+              schema: { type: string, const: no-store }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [record]
+                properties:
+                  record: { $ref: '#/components/schemas/Record' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: 候选为空
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /records/cities:
+    get:
+      tags: [records]
+      summary: 全量城市计数 + 省分组（不受筛选影响）
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CitiesAggregate' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /records/months:
+    get:
+      tags: [records]
+      summary: 月份列表与每月条数（月轴/预取用，P2）
+      parameters:
+        - $ref: '#/components/parameters/City'
+        - $ref: '#/components/parameters/CityMissing'
+        - $ref: '#/components/parameters/Province'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Months' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /stats:
+    get:
+      tags: [records]
+      summary: 墙统计（默认全量，口径见文档 §6.3.3）
+      parameters:
+        - $ref: '#/components/parameters/City'
+        - $ref: '#/components/parameters/CityMissing'
+        - $ref: '#/components/parameters/Province'
+        - name: from
+          in: query
+          schema: { type: string, format: date }
+        - name: to
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Stats' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /shops/{shopId}:
+    get:
+      tags: [shops]
+      summary: 店铺档案 + 该店记录
+      parameters:
+        - name: shopId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 100 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ShopDetail' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /shops/by-name:
+    get:
+      tags: [shops]
+      summary: 按店名查店铺（过渡兼容；同名跨城合并聚合）
+      parameters:
+        - name: name
+          in: query
+          required: true
+          schema: { type: string }
+        - name: city
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 200, default: 100 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+          description: 翻页游标（同 /shops/{shopId}）
+      responses:
+        '200':
+          description: OK（同名多店时 shop 为 null 并给 candidates）
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ShopDetail' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /photos:
+    post:
+      tags: [photos]
+      summary: 上传照片（multipart，≤10MiB，jpeg/png/webp）
+      description: |
+        一次上传一张（接口不变）。一条记录最多 5 张照片（`MAX_PHOTOS = 5`），
+        前端依次调最多 5 次本接口，把返回的 `photoId` 按用户选择顺序组成 `photoIds[]`，
+        再一次性提交给 `POST /records` / `PATCH /records/{id}`。
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                scene:
+                  type: string
+                  enum: [record, avatar, share]
+                  default: record
+      responses:
+        '201':
+          description: 上传成功
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Photo' }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          description: 文件超过 10 MiB
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '415':
+          description: 不支持的图片类型
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '422':
+          description: 内容安全未通过 / 参数缺失
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /photos/{photoId}:
+    delete:
+      tags: [photos]
+      summary: 删除照片（未被记录引用时；P2）
+      description: |
+        只要该照片仍被**任意**未删除记录的**任意一张**照片引用 → `409 PHOTO_IN_USE`；
+        一张照片可以被多条记录共用。
+      parameters:
+        - name: photoId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: 已删除
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: 仍被记录引用
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /geo/cities:
+    get:
+      tags: [geo]
+      summary: 城市字典（省→市，码点序）
+      security: []
+      parameters:
+        - name: If-None-Match
+          in: header
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          headers:
+            ETag:
+              schema: { type: string }
+            Cache-Control:
+              schema: { type: string, example: public, max-age=86400 }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GeoCities' }
+        '304':
+          description: 未变更
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 50, default: 10 }
+      description: 每页条数，默认 10（前端 PAGE_SIZE）
+    Cursor:
+      name: cursor
+      in: query
+      schema: { type: string }
+      description: 上一页返回的 nextCursor；不传为第一页
+    City:
+      name: city
+      in: query
+      schema: { type: string, maxLength: 40 }
+      description: 城市名精确匹配（URL 编码）；与 cityMissing 互斥
+    CityMissing:
+      name: cityMissing
+      in: query
+      schema: { type: boolean, default: false }
+      description: 只看"未记城市"的记录（等价前端 filterCity === ''）
+    Province:
+      name: province
+      in: query
+      schema: { type: string }
+      description: 按省筛选（服务端用城市字典展开；P1）
+
+  responses:
+    BadRequest:
+      description: 参数结构错误
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Unauthorized:
+      description: 未登录 / token 无效或过期
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: 资源不存在或不属于当前用户
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Conflict:
+      description: 版本冲突 / 照片仍被引用
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ValidationFailed:
+      description: 字段校验失败（error.fields 给出字段级原因）
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    TooManyRequests:
+      description: 触发限流
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum:
+                - BAD_REQUEST
+                - TOKEN_MISSING
+                - TOKEN_INVALID
+                - TOKEN_EXPIRED
+                - WECHAT_CODE_INVALID
+                - FORBIDDEN
+                - NOT_FOUND
+                - NO_RECORD
+                - CONFLICT
+                - PHOTO_IN_USE
+                - GONE
+                - FILE_TOO_LARGE
+                - UNSUPPORTED_MEDIA_TYPE
+                - VALIDATION_FAILED
+                - IMAGE_REJECTED
+                - RATE_LIMITED
+                - INTERNAL_ERROR
+                - SERVICE_UNAVAILABLE
+            message: { type: string, example: 吃了什么是必填 }
+            requestId: { type: string }
+            fields:
+              type: object
+              additionalProperties: { type: string }
+
+    AuthSession:
+      type: object
+      required: [accessToken, refreshToken, expiresIn, userId, isNewUser]
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        expiresIn: { type: integer, example: 7200 }
+        tokenType: { type: string, const: Bearer }
+        userId: { type: string }
+        isNewUser: { type: boolean }
+        user:
+          type: object
+          properties:
+            id: { type: string }
+            createdAt: { type: string, format: date-time }
+            recordCount: { type: integer }
+
+    Record:
+      type: object
+      required: [id, eat, rating, at, eatenAtUtc, version, createdAt, updatedAt]
+      description: |
+        `at` 必须是 `YYYY-MM-DDTHH:mm` 本地墙钟时间（前端排序/分月/解析依赖）；
+        `photo=null` 表示"用预置配图"，不是空块；`shop/city/district/note=null` 表示未记。
+        多图：`photos` 是全部照片（有序，0–5 张），`photos[0]` 即封面；
+        旧字段 `photo`/`photoThumb`/`photoId` 恒等于封面（兼容老客户端）。
+        `photos` 为空数组 = 没有自定义照片 → 用预置配图，此时三旧字段均为 null。
+      properties:
+        id:
+          type: string
+          maxLength: 64
+          example: rec_01J9Z8ZK3M4N5P6Q7R8S9T0V
+          description: 不透明；禁止 `^g.*_` 形态（前端会当作本地伪造数据）
+        eat: { type: string, minLength: 1, maxLength: 60 }
+        shop: { type: [string, 'null'], maxLength: 80 }
+        shopId: { type: [string, 'null'] }
+        city: { type: [string, 'null'], maxLength: 40, description: 城市名（不含省），可能是字典外表外值 }
+        district: { type: [string, 'null'], maxLength: 40 }
+        rating: { type: integer, minimum: 0, maximum: 5, description: 0=未评 }
+        at:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$'
+          example: '2026-10-09T12:30'
+        tzOffset: { type: [string, 'null'], example: '+08:00' }
+        eatenAtUtc: { type: string, format: date-time }
+        note: { type: [string, 'null'], maxLength: 200 }
+        photo:
+          type: [string, 'null']
+          format: uri
+          description: 展示图（约 1080w）= 封面 = `photos[0]`；null = 用预置配图
+        photoThumb:
+          type: [string, 'null']
+          format: uri
+          description: 列表缩略图（约 400w）= 封面 = `photos[0]`
+        photoId: { type: [string, 'null'], description: '封面照片 id = `photos[0].photoId`' }
+        photos:
+          type: array
+          description: 全部照片（有序，0–5 张），顺序即用户选择顺序；`photos[0]` 是封面；空数组 = 用预置配图
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/RecordPhoto'
+        version: { type: integer, minimum: 1 }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    RecordPhoto:
+      type: object
+      required: [photoId, photo, photoThumb]
+      description: 一条记录上的一张照片（封面 = 记录 `photos[0]`）
+      properties:
+        photoId:
+          type: string
+          description: 照片实体 id（编辑/删除时用）
+        photo:
+          type: string
+          format: uri
+          description: 展示图（约 1080w）
+        photoThumb:
+          type: string
+          format: uri
+          description: 列表缩略图（约 400w）
+
+    RecordCreate:
+      type: object
+      required: [eat]
+      description: |
+        新建记录。照片：`photoIds` 最多 5 个，缺省 = 无照片、`[]` = 无照片；
+        旧字段 `photoId` 兼容期保留，仅当 `photoIds` 未出现时生效；
+        两者同时出现 → `photoIds` 优先，`photoId` 被忽略（不报错）。
+      properties:
+        eat: { type: string, minLength: 1, maxLength: 60 }
+        shop: { type: [string, 'null'], maxLength: 80 }
+        shopId: { type: [string, 'null'] }
+        city: { type: [string, 'null'], maxLength: 40 }
+        district: { type: [string, 'null'], maxLength: 40 }
+        rating: { type: integer, minimum: 0, maximum: 5, default: 0 }
+        note: { type: [string, 'null'], maxLength: 200 }
+        photoId:
+          type: [string, 'null']
+          description: 旧字段（兼容期保留）；`photoIds` 出现时本字段被忽略；null = 无照片
+        photoIds:
+          type: array
+          description: 照片 id 列表（有序，最多 5 个）；缺省 = 无照片；`[]` = 无照片；重复或超限 → 422 `fields.photoIds`
+          maxItems: 5
+          items: { type: string, maxLength: 64 }
+        at:
+          type: [string, 'null']
+          pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$'
+          description: 不传 = 服务端当前时间（对齐前端 stampNow()）
+        tzOffset:
+          type: [string, 'null']
+          example: '+08:00'
+        eatenAt:
+          type: [string, 'null']
+          format: date-time
+          description: RFC3339；与 at 二选一，优先
+        clientRequestId: { type: [string, 'null'], maxLength: 64 }
+
+    RecordPatch:
+      type: object
+      description: |
+        仅更新出现的字段；`at` 可改。
+        照片：`photoIds` 出现即**整体替换**该记录的照片集合（不是追加），最多 5 个；
+        不传 = 照片不动，`[]` = 清空全部照片（回到预置配图）。
+        旧字段 `photoId` 兼容期保留，仅当 `photoIds` 未出现时生效；
+        两者同时出现 → `photoIds` 优先，`photoId` 被忽略（不报错）。
+      properties:
+        eat: { type: string, minLength: 1, maxLength: 60 }
+        shop: { type: [string, 'null'], maxLength: 80 }
+        shopId: { type: [string, 'null'] }
+        city: { type: [string, 'null'], maxLength: 40 }
+        district: { type: [string, 'null'], maxLength: 40 }
+        rating: { type: integer, minimum: 0, maximum: 5 }
+        note: { type: [string, 'null'], maxLength: 200 }
+        photoId:
+          type: [string, 'null']
+          description: 旧字段（兼容期保留）；`photoIds` 出现时本字段被忽略；null = 清空全部照片
+        photoIds:
+          type: array
+          description: 照片 id 列表（有序，最多 5 个）；出现即**整体替换**（不是追加）；不传 = 照片不动；`[]` = 清空
+          maxItems: 5
+          items: { type: string, maxLength: 64 }
+        at:
+          type: string
+          pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$'
+        tzOffset: { type: string }
+        expectedVersion: { type: integer, minimum: 1 }
+
+    RecordList:
+      type: object
+      required: [items, hasMore]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Record' }
+        nextCursor:
+          type: [string, 'null']
+        hasMore: { type: boolean }
+        total:
+          type: integer
+          description: 当前筛选命中的总条数（可选返回）
+
+    CitiesAggregate:
+      type: object
+      required: [total, uncityCount, cityCounts, provinces]
+      properties:
+        total:
+          type: integer
+          description: 全量记录数（不受城市筛选影响；对应前端 records.length）
+        uncityCount:
+          type: integer
+          description: city 为空的记录数（"未记"桶）
+        cityCounts:
+          type: array
+          description: count 降序，同数按 zh-Hans-CN 拼音序
+          items:
+            type: object
+            required: [city, count]
+            properties:
+              city: { type: string }
+              count: { type: integer }
+        provinces:
+          type: array
+          description: 省 count 降序（同数码点序），省内城市 count 降序（同数码点序）；未记不参与；表外城市归"其他"
+          items:
+            type: object
+            required: [province, count, cities]
+            properties:
+              province: { type: string }
+              count: { type: integer }
+              cities:
+                type: array
+                items:
+                  type: object
+                  required: [city, count]
+                  properties:
+                    city: { type: string }
+                    count: { type: integer }
+        generatedAt: { type: string, format: date-time }
+
+    Months:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+            required: [month, count]
+            properties:
+              month: { type: string, pattern: '^\d{4}-\d{2}$' }
+              count: { type: integer }
+              firstCursor:
+                type: [string, 'null']
+                deprecated: true
+                description: >-
+                  该月最新记录的游标。⚠ 纯 keyset 语义是严格 `< cursor`，
+                  拿它翻页**不含**该条；仅为兼容旧调用方保留。
+                  新代码请用 firstCursorInclusive。
+              firstCursorInclusive:
+                type: [string, 'null']
+                description: >-
+                  该月最新记录的游标，配 GET /records?cursor=<它>&cursorInclusive=true
+                  使用即可把该条**包含**进结果（月轴跳月的正确用法）。
+
+    Stats:
+      type: object
+      required:
+        [total, fiveCount, firstFiveEat, cities, shops, dishCount, avgRating, ratedCount, avgRatingRated, repeated]
+      description: 口径见文档 §6.3.3；默认全量（不吃城市筛选）
+      properties:
+        scope:
+          type: object
+          properties:
+            city: { type: [string, 'null'] }
+            cityMissing: { type: boolean }
+            from: { type: [string, 'null'], format: date }
+            to: { type: [string, 'null'], format: date }
+        total:
+          type: integer
+          description: 记录条数（UI 文案「N 张照片」）
+        fiveCount:
+          type: integer
+          description: rating === 5 的条数
+        firstFiveEat:
+          type: string
+          description: 按时间倒序第一条五分记录 eat；无则 ""
+        cities:
+          type: integer
+          description: distinct(city) 排除空值
+        shops:
+          type: integer
+          description: distinct(shop) 排除空值
+        dishCount: { type: integer, description: distinct(eat) }
+        avgRating:
+          type: number
+          description: Σ(rating)/total，rating=0 计入分母（前端既有口径）
+        ratedCount: { type: integer }
+        avgRatingRated:
+          type: number
+          description: Σ(rating>0)/ratedCount；无评分时为 0
+        repeated:
+          type: array
+          description: eat 分组 count≥2，按 count 降序、同数 zh-Hans-CN；不截断，前端取前 3
+          items:
+            type: object
+            properties:
+              eat: { type: string }
+              count: { type: integer }
+        generatedAt: { type: string, format: date-time }
+
+    Shop:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        cities:
+          type: array
+          items: { type: string }
+        createdAt: { type: string, format: date-time }
+
+    ShopDetail:
+      type: object
+      required: [shop, stats, records]
+      properties:
+        shop:
+          oneOf:
+            - $ref: '#/components/schemas/Shop'
+            - type: 'null'
+          description: 同名跨城无法唯一确定时为 null，并给 candidates
+        candidates:
+          type: array
+          items: { $ref: '#/components/schemas/Shop' }
+        nextCursor: { type: string, nullable: true }
+        hasMore: { type: boolean }
+        stats:
+          type: object
+          description: 店铺口径：avgRating 只算已评（与墙统计不同）
+          properties:
+            visitCount: { type: integer }
+            dishCount: { type: integer }
+            cityCount: { type: integer }
+            avgRating: { type: number }
+            ratedCount: { type: integer }
+            fiveCount: { type: integer }
+            firstAt: { type: string }
+            lastAt: { type: string }
+        records:
+          type: array
+          items: { $ref: '#/components/schemas/Record' }
+
+    Photo:
+      type: object
+      required: [photoId, url, photo, photoThumb, status]
+      properties:
+        photoId: { type: string }
+        url: { type: string, format: uri, description: 原图 }
+        photo: { type: string, format: uri, description: 1080w，写进记录 photo 字段 }
+        photoThumb: { type: string, format: uri, description: 400w，列表缩略图 }
+        width: { type: integer }
+        height: { type: integer }
+        size: { type: integer }
+        mime: { type: string }
+        status: { type: string, enum: [approved, rejected] }
+        createdAt: { type: string, format: date-time }
+
+    GeoCities:
+      type: object
+      required: [version, provinces]
+      properties:
+        version: { type: string, example: '2026-10-01' }
+        updatedAt: { type: string, format: date-time }
+        provinces:
+          type: array
+          description: 省码点序；省内城市码点序；共 208 城 / 34 省
+          items:
+            type: object
+            required: [province, cities]
+            properties:
+              province: { type: string }
+              cities:
+                type: array
+                items: { type: string }

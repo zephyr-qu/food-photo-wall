@@ -1,0 +1,157 @@
+/* ================================================================
+   统计浮层样式
+
+   逐项对照原型 photo-wall-h5 的 .sheet / .stat（1px = 2rpx）：
+     .sheet         圆角 16px 上沿、max-height 86%、上滑 0.32s
+     .sheet__grip   36×4px、圆角 2px、margin 9px auto 0
+     .sheet__bar    padding 14px 18px 10px、下边框 0.5px
+     .sheet__t      17px 衬线 600、字距 0.01em
+     .sheet__x      30×30px 圆形
+     .sheet__body   padding 6px 18px 22px
+     .stat          padding 13px 0、下边框、baseline 对齐、gap 10px
+     .stat__k       11.5px、min-width 70px、颜色 ink-2
+     .stat__v       14px 600、字距 0.01em
+     .stat__n       margin-left auto、10px 等宽、颜色 ink-3
+   ================================================================ */
+@use '../../styles/tokens' as *;
+
+.stats-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 92;
+  /* 关闭时不拦截任何点击（否则浮层关着也挡住墙） */
+  pointer-events: none;
+}
+
+.stats-sheet--on {
+  pointer-events: auto;
+}
+
+/* 遮罩：只负责压暗，不抢焦点 */
+.stats-sheet__mask {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(8, 8, 10, 0.42);
+  opacity: 0;
+  transition: opacity 0.24s ease;
+}
+
+.stats-sheet--on .stats-sheet__mask {
+  opacity: 1;
+}
+
+/* 纸面：从底部滑上来 */
+.stats-sheet__paper {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  max-height: 86%;
+  background: $bg-app;
+  border-radius: 32rpx 32rpx 0 0;
+  box-shadow: 0 -36rpx 120rpx -36rpx rgba(0, 0, 0, 0.5);
+  transform: translateY(102%);
+  transition: transform 0.32s cubic-bezier(0.22, 0.86, 0.2, 1);
+  /* 底部安全区，最后一行不贴 home indicator；
+     max(...,24rpx) 兜底环境值为 0 的设备 */
+  padding-bottom: max(env(safe-area-inset-bottom), 24rpx);
+}
+
+.stats-sheet--on .stats-sheet__paper {
+  transform: translateY(0);
+}
+
+/* 上沿的 grip：36×4px → 72×8rpx（告诉用户这张纸能往下推） */
+.stats-sheet__grip {
+  flex: 0 0 auto;
+  width: 72rpx;
+  height: 8rpx;
+  margin: 18rpx auto 0;
+  border-radius: 4rpx;
+  background: $border-strong;
+}
+
+/* 标题条：padding 14px 18px 10px → 28rpx 36rpx 20rpx */
+.stats-sheet__bar {
+  display: flex;
+  align-items: center;
+  gap: $s-2;
+  padding: 28rpx $gutter 20rpx;
+  border-bottom: $hairline solid $border;
+  flex: 0 0 auto;
+}
+
+/* 标题用衬线：和详情页菜名、店铺页店名同一套「纸感」（17px → 34rpx） */
+.stats-sheet__t {
+  font-family: $font-serif;
+  font-size: 34rpx;
+  font-weight: $w-semi;
+  letter-spacing: 0.01em;
+  color: $text-1;
+}
+
+.stats-sheet__x {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60rpx;
+  height: 60rpx;
+  margin-left: auto;
+  border-radius: 50%;
+  font-size: 34rpx;
+  line-height: 1;
+  color: $text-2;
+}
+
+/* 内容区：padding 6px 18px 22px → 12rpx 36rpx 44rpx */
+.stats-sheet__body {
+  padding: 12rpx $gutter 44rpx;
+  overflow-y: auto;
+}
+
+/* ---------------- 六行数据 ---------------- */
+/* 每行：标签（11.5px，固定 70px 宽）+ 值（14px 600）+ 可选补充（10px 等宽，靠右）。
+   靠字号和颜色分层，不加卡片、不加图标。 */
+.stat {
+  display: flex;
+  align-items: baseline;
+  gap: 20rpx;
+  padding: 26rpx 0;
+  border-bottom: $hairline solid $border;
+}
+
+.stat:last-child {
+  border-bottom: 0;
+}
+
+.stat__k {
+  flex: 0 0 auto;
+  min-width: 140rpx;
+  font-size: 23rpx;
+  color: $text-2;
+}
+
+.stat__v {
+  font-size: 28rpx;
+  font-weight: $w-semi;
+  letter-spacing: 0.01em;
+  color: $text-1;
+  @include tabular;
+}
+
+.stat__n {
+  margin-left: auto;
+  font-family: $font-mono;
+  font-size: 20rpx;
+  letter-spacing: 0.04em;
+  color: $text-3;
+  @include truncate;
+}

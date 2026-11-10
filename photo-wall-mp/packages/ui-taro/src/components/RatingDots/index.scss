@@ -1,0 +1,101 @@
+/* ================================================================
+   评分圆点样式
+
+   两套外观用修饰类区分，不在 JS 里写内联样式：
+     .rating--md  44rpx  表单里可点
+     .rating--sm  12rpx  详情页纯展示
+     .rating--light  浅色令牌（$accent / $border-strong）
+     .rating--dark   深色令牌（$d-accent / $d-border-strong）
+
+   ⚠ 小程序不支持通配选择器，所以每条规则都写全，不要用 .rating--md > *
+   ================================================================ */
+@use '../../styles/tokens' as *;
+
+.rating {
+  display: flex;
+  align-items: center;
+}
+
+/* ---------------- 尺寸 ---------------- */
+/* 可点态的圆点本体就是 88rpx 的热区，视觉圆只有 44rpx（见下面的 ::after）。
+   44rpx(=22px) 的纯视觉圆点作为触摸目标太小，容易点偏。
+   gap 归零：视觉间距由 88rpx 热区里的留白自然产生。 */
+.rating--md {
+  gap: 0;
+}
+
+.rating--sm {
+  gap: 10rpx;
+}
+
+.rating__dot {
+  border-radius: $r-full;
+  border: $hairline solid transparent;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+/* md 可点态：88rpx 热区里居中画一个 44rpx 的圆（用 : 上的伪元素不方便，
+   直接把圆点本体做成热区、用 background-clip 不可行，所以用内层视觉 + 外层热区）*/
+.rating__dot--md {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 88rpx;
+  height: 88rpx;
+  border: 0;
+  background: transparent;
+}
+
+.rating__dot--md::after {
+  content: '';
+  display: block;
+  width: 44rpx;
+  height: 44rpx;
+  border-radius: $r-full;
+  border: $hairline solid $border-strong;
+  box-sizing: border-box;
+}
+
+.rating__dot--sm {
+  width: 12rpx;
+  height: 12rpx;
+}
+
+/* ---------------- 浅色主题（表单） ---------------- */
+.rating--light .rating__dot--md::after {
+  border-color: $border-strong;
+}
+
+.rating--light .rating__dot--md.rating__dot--on::after {
+  border-color: $accent;
+  background: $accent;
+}
+
+.rating--light .rating__dot--sm {
+  border-color: $border-strong;
+}
+
+.rating--light .rating__dot--sm.rating__dot--on {
+  border-color: $accent;
+  background: $accent;
+}
+
+/* ---------------- 深色主题（详情页） ---------------- */
+.rating--dark .rating__dot--md::after {
+  border-color: $d-border-strong;
+}
+
+.rating--dark .rating__dot--md.rating__dot--on::after {
+  border-color: $d-accent;
+  background: $d-accent;
+}
+
+.rating--dark .rating__dot--sm {
+  border-color: $d-border-strong;
+}
+
+.rating--dark .rating__dot--sm.rating__dot--on {
+  border-color: $d-accent;
+  background: $d-accent;
+}

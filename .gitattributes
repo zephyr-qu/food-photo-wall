@@ -1,0 +1,13 @@
+* text=auto eol=lf
+
+# 二进制：别做换行/文本处理
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.pdf binary

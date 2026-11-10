@@ -1,0 +1,32 @@
+{
+  "name": "photo-wall",
+  "version": "1.0.0",
+  "private": true,
+  "description": "X师傅美食记 · 照片墙（Taro 小程序 + H5）",
+  "workspaces": [
+    "packages/*",
+    "server"
+  ],
+  "scripts": {
+    "dev:weapp": "npm run dev:weapp -w @photo-wall/ui-taro",
+    "build:weapp": "npm run build:weapp -w @photo-wall/ui-taro",
+    "build:h5": "npm run build:h5 -w @photo-wall/ui-taro",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "lint": "eslint .",
+    "verify": "npm run lint && npm run typecheck && npm run test && npm run build:weapp && npm run build:h5 && npm run size",
+    "server": "node server/src/index.js",
+    "server:test": "cd server && npm test",
+    "size": "npm run size -w @photo-wall/ui-taro",
+    "sync:contract": "npm run sync:contract -w @photo-wall/ui-taro"
+  },
+  "engines": {
+    "node": ">=22.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^9.39.5",
+    "globals": "^17.13.0",
+    "typescript-eslint": "^8.72.1"
+  }
+}

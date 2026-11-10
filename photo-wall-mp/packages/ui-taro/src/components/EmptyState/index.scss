@@ -1,0 +1,94 @@
+/* ================================================================
+   空态样式
+
+   两种形态：
+     默认          撑满容器居中（整页无效时用，父容器负责给高度）
+     .--mark       纵排 + 空画框 + 副文案（内容区为空时用）
+
+   ⚠ 小程序不支持通配选择器，规则都写全。
+   ================================================================ */
+@use '../../styles/tokens' as *;
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------------- 带画框的形态（墙） ----------------
+   对照原型 .wall-empty：90px 32px 40px 内边距、18px 间距、
+   46px 虚线空画框（内嵌 12px 内缩的淡底方块）、衬线两行提示。 */
+.empty-state--mark {
+  gap: 36rpx;
+  padding: 180rpx 64rpx 80rpx;
+}
+
+/* 空画框：虚线描边（原型 1px dashed hair-2 → 2rpx），中间嵌一块淡底 */
+.empty-state__mark {
+  position: relative;
+  box-sizing: border-box;
+  width: 92rpx;
+  height: 92rpx;
+  border: 2rpx dashed rgba(23, 23, 26, 0.16); /* 原型 --hair-2 */
+  border-radius: 6rpx;
+}
+
+/* 框内淡底方块：inset 12px → 24rpx（46px 画框里剩 22px 方块） */
+.empty-state__mark-in {
+  position: absolute;
+  top: 24rpx;
+  right: 24rpx;
+  bottom: 24rpx;
+  left: 24rpx;
+  background: rgba(23, 23, 26, 0.1); /* 原型 --hair */
+  border-radius: 4rpx;
+}
+
+/* 两行文案包一层：mark 形态下两行是同一段话，行距靠 line-height 连续 */
+.empty-state__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* mark 形态的文字：衬线 30rpx、行高 1.9、ink-2 —— 照抄原型 .wall-empty__t */
+.empty-state--mark .empty-state__t {
+  font-family: $font-serif;
+  font-size: 30rpx;
+  font-weight: $w-reg;
+  line-height: 1.9;
+  color: $text-2;
+}
+
+.empty-state--mark .empty-state__hint {
+  font-family: $font-serif;
+  font-size: 30rpx;
+  font-weight: $w-reg;
+  line-height: 1.9;
+  color: $text-2;
+}
+
+/* ---------------- 文字 ---------------- */
+.empty-state__t {
+  font-size: $t-base;
+  color: $text-1;
+}
+
+.empty-state__hint {
+  font-size: $t-micro;
+  color: $text-3;
+}
+
+/* ---------------- 深色主题（详情页） ---------------- */
+.empty-state--dark .empty-state__t {
+  color: $d-text-3;
+}
+
+.empty-state--dark .empty-state__hint {
+  color: $d-text-3;
+}
+
+.empty-state--dark .empty-state__mark {
+  border-color: $d-border-strong;
+}

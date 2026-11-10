@@ -1,0 +1,131 @@
+/* ================================================================
+   隐私授权弹窗
+
+   纸色抽屉从底部升起，压暗整页。层级 200：必须盖住城市抽屉（69）、
+   dock（66）、统计/聚光灯（80+），否则会被别的浮层挡住。
+   ================================================================ */
+@use '../../styles/tokens' as *;
+
+.pg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+}
+
+.pg__mask {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: $black-a5;
+  animation: pg-fade 0.18s ease-out both;
+}
+
+.pg__sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: $s-2 $s-4 calc(#{$s-5} + max(env(safe-area-inset-bottom), 24rpx));
+  background: $bg-app;
+  border-radius: 32rpx 32rpx 0 0;
+  box-shadow: 0 -16rpx 64rpx rgba(23, 23, 26, 0.18);
+  animation: pg-sheet-in 0.24s ease-out both;
+}
+
+.pg__handle {
+  width: 72rpx;
+  height: 8rpx;
+  margin: 0 auto $s-3;
+  border-radius: $r-full;
+  background: $black-a2;
+}
+
+.pg__title {
+  display: block;
+  margin-bottom: $s-2;
+  font-size: $t-base + 4rpx;
+  font-weight: $w-semi;
+  color: $text-1;
+  letter-spacing: 0.01em;
+}
+
+.pg__body {
+  display: block;
+  font-size: 28rpx;
+  line-height: 1.65;
+  color: $text-2;
+}
+
+.pg__link {
+  color: $text-1;
+  text-decoration: underline;
+  text-underline-offset: 4rpx;
+}
+
+.pg__note {
+  display: block;
+  margin-top: $s-2;
+  font-size: $t-micro;
+  line-height: 1.6;
+  color: $text-3;
+}
+
+.pg__acts {
+  display: flex;
+  gap: $s-2;
+  margin-top: $s-5;
+}
+
+.pg__act {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 88rpx;
+  border-radius: $r-md;
+  font-size: $t-base;
+  font-weight: $w-semi;
+  color: $text-1;
+  background: $bg-element;
+}
+
+/* 小程序原生 button 自带的边框/外边距要清掉，否则和左边那颗不一致 */
+button.pg__act {
+  margin: 0;
+  padding: 0;
+  line-height: 1;
+}
+
+button.pg__act::after {
+  border: none;
+}
+
+.pg__act--primary {
+  background: $solid-bg;
+  color: $solid-fg;
+}
+
+@keyframes pg-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pg-sheet-in {
+  from {
+    transform: translateY(48rpx);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

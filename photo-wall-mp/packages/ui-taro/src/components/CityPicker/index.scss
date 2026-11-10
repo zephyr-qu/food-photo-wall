@@ -1,0 +1,199 @@
+/* ================================================================
+   城市选择浮层（两级：省 → 市）
+
+   两个容器形态共用同一套行/列表样式：
+   · .citypick--dd    照片墙：顶栏下的纸色小卡片（只盖右上一块）
+   · .citypick--sheet 表单：底部上滑的抽屉（带把手、让安全区）
+
+   z-index：遮罩 68 < 浮层 69 < 顶栏 70 —— 照片墙上顶栏按钮仍可点。
+   ================================================================ */
+@use '../../styles/tokens' as *;
+
+.citypick-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 68;
+}
+
+/* 抽屉形态必须压暗：纸色浮层压在同样纸色的页面上，不压暗就糊成一片。
+   照片墙的卡片形态不压暗 —— 那里要的是「墙还看得见」。 */
+.citypick-mask--dim {
+  background: rgba(23, 23, 26, 0.32);
+}
+
+.citypick {
+  position: fixed;
+  z-index: 69;
+  background: $bg-app;
+  border: $hairline solid $black-a2;
+  box-shadow: 0 36rpx 88rpx rgba(23, 23, 26, 0.2);
+}
+
+/* 照片墙的卡片：窄一档、行矮一档 ——
+   城市名都很短（两三个字），按抽屉的行高排会显得每行留一大片空白。 */
+.citypick--dd {
+  right: 28rpx;
+  width: 300rpx;
+  padding: 8rpx;
+  border-radius: 24rpx;
+  animation: citypick-dd-in 0.16s ease-out both;
+}
+
+.citypick--dd .citypick__h {
+  padding: 4rpx 12rpx 6rpx;
+  font-size: 16rpx;
+}
+
+.citypick--dd .citypick__row {
+  height: 64rpx;
+  padding: 0 16rpx;
+  border-radius: 14rpx;
+  font-size: 26rpx;
+}
+
+.citypick--dd .citypick__n {
+  margin-left: 12rpx;
+  font-size: 20rpx;
+}
+
+.citypick--dd .citypick__row--back {
+  height: 54rpx;
+  font-size: 22rpx;
+}
+
+.citypick--sheet {
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 16rpx 24rpx calc(#{$s-3} + max(env(safe-area-inset-bottom), 24rpx));
+  border-bottom: 0;
+  border-radius: 32rpx 32rpx 0 0;
+  animation: citypick-sheet-in 0.22s ease-out both;
+}
+
+@keyframes citypick-dd-in {
+  from {
+    opacity: 0;
+    transform: translateY(-12rpx) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes citypick-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(48rpx);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* 抽屉顶部的把手：给「可以往下甩」一个视觉抓手 */
+.citypick__handle {
+  width: 72rpx;
+  height: 8rpx;
+  margin: 0 auto 16rpx;
+  border-radius: 4rpx;
+  background: $border;
+}
+
+/* 标题行：mono 小字拉开字距，说明这是「换一种看法 / 选一项」，不是设置。
+   ink-3 纸底 3.19:1 不够 AA —— 用 $text-3（sand-11），与 text-2 同档。 */
+.citypick__h {
+  padding: 8rpx 20rpx 12rpx;
+  font-family: $font-mono;
+  font-size: 18rpx;
+  letter-spacing: 0.12em;
+  color: $text-3;
+}
+
+/* 列表：卡片里 52vh 封顶、抽屉里 56vh 封顶，超出就在浮层内滚。
+   省 / 城市再多也放得下 —— 一条条竖着排，超出的部分滚动看。 */
+.citypick__scroll {
+  position: relative;
+}
+
+.citypick__list {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* 底部纸色渐隐：列表滚起来时提示「下面还有」。内容不满一屏时它落在空白纸上，同色隐形。 */
+.citypick__fade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 24rpx;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(253, 253, 252, 0), $bg-app);
+}
+
+.citypick--dd .citypick__list {
+  max-height: 52vh;
+}
+
+.citypick--sheet .citypick__list {
+  max-height: 56vh;
+}
+
+.citypick__row {
+  display: flex;
+  align-items: center;
+  height: 84rpx;
+  padding: 0 20rpx;
+  border-radius: 20rpx;
+  font-size: 28rpx;
+  color: $text-1;
+}
+
+.citypick__name {
+  flex: 1;
+  @include truncate;
+}
+
+.citypick__n {
+  margin-left: 16rpx;
+  font-family: $font-mono;
+  font-size: 22rpx;
+  color: $text-3;
+  @include tabular;
+}
+
+.citypick__chev {
+  margin-left: 8rpx;
+  font-size: 24rpx;
+  color: $text-3;
+}
+
+/* 选中：墨底纸字（和胶囊 .pill--on 同一套语义） */
+.citypick__row--on {
+  background: $solid-bg;
+  color: $solid-fg;
+
+  .citypick__n,
+  .citypick__chev {
+    color: $on-solid-2;
+  }
+}
+
+/* 二级的返回行：比城市行矮一档，弱化成导航 */
+.citypick__row--back {
+  height: 68rpx;
+  color: $text-2;
+  font-size: 24rpx;
+  letter-spacing: 0.02em;
+}

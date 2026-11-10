@@ -1,0 +1,341 @@
+/* ================================================================
+   详情页样式 · 逐项对照原型 photo-wall-h5 的 .expand
+
+   原型的结构（数值取 global.css 原值，1px = 2rpx）：
+     .expand__bar   高 96px，底部对齐，左右 16px，pb 10px —— 关闭键 + 日期戳
+     .expand__photo 4:5 画框，左右 16px 内边距，深底
+     .expand__frame 画框内层 #232326 + 圆角 3px + 内描边 + 投影
+     .expand__info  padding 20px 22px 26px
+     .expand__name  26px 衬线 600
+     .expand__sub   11.5px 白色 0.6
+     .expand__note  13px 白色 0.84（空态 0.38）
+     .expand__row   评分 + 按钮同一行，mt 18px
+     .ghostbtn      高 34px、圆角 17px、描边白 0.34、底色白 0.06、11.5px 600
+
+   之前这页只有照片 + 名称，缺了顶部条，画框也没有相纸底色 ——
+   和原型差得最明显的正是这两处。
+   ================================================================ */
+@use '../../styles/tokens' as *;
+
+.dp {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: $d-bg;
+}
+
+/* 空态：文案与配色由 components/EmptyState 负责，这里只让它撑满整页 */
+.dp--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------------- 顶部条：日期戳 ----------------
+   小程序：返回交给原生导航栏（有原生返回箭头，不再画 ×），
+   这条只剩日期戳，从原型的 192rpx 瘦到 76rpx ——
+   上栏不再「原生导航 + 自绘厚条」叠两层。
+   H5：没有原生导航，保留原型的 ×（左）+ 戳（右）：
+   戳用 margin-left:auto 顶到右边，两种平台都落位正确。 */
+.dp__bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  height: 76rpx;
+  padding: 0 $gutter 20rpx;
+}
+
+/* 日期戳：等宽小字、字距拉开，安安静静待在右上 */
+.dp__stamp {
+  margin-left: auto;
+  font-family: $font-mono;
+  font-size: 20rpx;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* 关闭键：只在 H5 渲染（小程序走原生返回，JSX 里按 TARO_ENV 分流）。
+   原型 .expand__close：68rpx 圆、白 22% 细边、白 8% 玻璃底、34rpx 叉。 */
+.dp__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 68rpx;
+  height: 68rpx;
+  border: $hairline solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 34rpx;
+  line-height: 1;
+  color: #fff;
+}
+
+/* ---------------- 照片 ---------------- */
+/* 照片区：固定 4:5 画框，照片按原比例完整显示（aspectFit），绝不裁切。
+   横图两侧/上下留深色边 —— 像相册里的裱框，而不是"照片没填满的黑洞"。
+   画框本身左右各留 16px 内边距（原型 .expand__photo）。 */
+.dp__shot {
+  flex: 0 0 auto;
+  width: 100%;
+  padding: 0 $gutter;
+  box-sizing: border-box;
+}
+
+/* 画框内层：比页面底亮一档的底色 + 圆角 + 一圈极淡内描边 + 投影 */
+.dp__frame {
+  position: relative;
+  width: 100%;
+  /* 4:5 画框。用 padding-top 撑高，兼容老基础库的 WebView。 */
+  padding-top: 125%;
+  overflow: hidden;
+  border-radius: 6rpx;
+  background: #232326;
+  box-shadow: 0 36rpx 100rpx -36rpx rgba(0, 0, 0, 0.8),
+    inset 0 0 0 $hairline rgba(255, 255, 255, 0.07);
+}
+
+.dp__img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------------- 多图：Swiper + 自绘圆点 ----------------
+   Swiper 内部是 absolute 布局，给它撑高没有意义（撑出来的是容器不是它），
+   所以外层 .dp__frame 继续用 padding-top: 125% 撑出 4:5 画框，
+   Swiper 自己绝对定位铺进去。
+
+   ⚠ 用 left/top/right/bottom 四边而不是 `inset: 0`：inset 的支持度比
+   绝对定位老一代 WebView 差（老 iOS WKWebView / 部分安卓机不认），
+   而这页是要在真机上看的 —— 四边写全最稳。 */
+.dp__swiper {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* SwiperItem 不要写 style（Taro 已知问题），只用 class */
+.dp__slide {
+  width: 100%;
+  height: 100%;
+}
+
+/* 底部小圆点：贴画框内底，居中排开。
+   不用 Swiper 自带的 indicatorDots —— 自带指示点位置和大小都由平台决定，
+   H5 和小程序长得不一样；这里自绘保证两端一致。 */
+.dp__dots {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+}
+
+.dp__dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: $r-full;
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.dp__dot--on {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+/* ---------------- 说明 ---------------- */
+.dp__body {
+  flex: 0 0 auto;
+  /* 底部安全区：手机是手势条时，最后一行（评分 + 按钮）不贴 home
+     indicator；max() 里的 24rpx 是兜底 —— 环境值为 0 的设备也留出呼吸。 */
+  padding: 40rpx 44rpx calc(52rpx + max(env(safe-area-inset-bottom), 24rpx));
+}
+
+/* 菜名（原型 .expand__name：26px → 52rpx 衬线 600，行高 1.15） */
+.dp__name {
+  display: block;
+  font-family: $font-serif;
+  font-size: 52rpx;
+  font-weight: $w-semi;
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  color: #fff;
+}
+
+/* 地点与时间：跟在菜名下面一行，用低对比色退到后面
+   （原型 .expand__sub：11.5px → 23rpx，白色 0.6） */
+.dp__meta {
+  display: block;
+  margin-top: 16rpx;
+  font-size: 23rpx;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* 备注（原型 .expand__note：13px → 26rpx，行高 1.8，白色 0.84） */
+.dp__note {
+  display: block;
+  margin-top: 28rpx;
+  font-size: 26rpx;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.84);
+}
+
+/* 没有备注时的空态：用更淡的颜色区分"真的没写"（原型 0.38） */
+.dp__note--empty {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+/* ---------------- 评分 + 操作同一行 ---------------- */
+/* 对照原型 .expand__row：左边评分、右边一组按钮，一行排开，mt 18px。 */
+.dp__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-top: 36rpx;
+  flex-wrap: wrap;
+}
+
+/* 评分：圆点 + 等宽小字（原型 .expand__rate：10px → 20rpx，白色 0.62） */
+.dp__rate {
+  display: flex;
+  align-items: center;
+  gap: 14rpx;
+}
+
+.dp__score {
+  font-family: $font-mono;
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.62);
+  @include tabular;
+}
+
+/* 一组 ghost 按钮（原型 .ghostbtn）：
+   高 34px→68rpx、圆角 17px→34rpx、描边白 0.34、底色白 0.06、
+   字号 11.5px→23rpx、字重 600。 */
+.dp__acts {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-left: auto;
+}
+
+.dp__act {
+  /* 覆盖 .btn 的大按钮风格 */
+  flex: 0 0 auto;
+  height: 68rpx;
+  padding: 0 28rpx;
+  border: $hairline solid rgba(255, 255, 255, 0.34);
+  border-radius: 34rpx;
+  background: rgba(255, 255, 255, 0.06);
+  font-size: 23rpx;
+  font-weight: $w-semi;
+  letter-spacing: 0.02em;
+  color: #fff;
+}
+
+/* 删除是破坏性操作：边框和文字都偏暖红（原型 .ghostbtn.danger） */
+.dp__act--danger {
+  border-color: rgba(255, 140, 120, 0.5);
+  color: #ffb5a6;
+}
+
+/* ---------------- 接后端后新增 ----------------
+   详情页以前从本地数组 find，永远同步有值；现在要请求，必须给
+   「加载中」和「失败可重试」两种状态。深色底上不能出现白块。 */
+.dp__skeleton {
+  width: 60%;
+  height: 40rpx;
+  border-radius: $r-full;
+  background: linear-gradient(
+    100deg,
+    $d-bg-element 30%,
+    $d-border 50%,
+    $d-bg-element 70%
+  );
+  background-size: 300% 100%;
+  animation: dp-sk 1.4s ease-in-out infinite;
+}
+
+@keyframes dp-sk {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+.dp__fail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $s-3;
+}
+
+.dp__fail-t {
+  font-size: 28rpx;
+  color: $d-text-2;
+}
+
+.dp__fail-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 72rpx;
+  padding: 0 $s-5;
+  border: $hairline solid $d-border-strong;
+  border-radius: $r-full;
+  font-size: 28rpx;
+  color: $d-text-1;
+}
+
+/* 删除后的撤销条：贴底、深色、细。
+   刻意压得很轻 —— 它只是"后悔药"，不该和内容抢注意力。 */
+.undo {
+  position: fixed;
+  left: $s-4;
+  right: $s-4;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + #{$s-4});
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $s-4;
+  padding: 0 $s-4 0 $s-5;
+  height: 96rpx;
+  border-radius: $r-full;
+  background: rgba(28, 27, 25, 0.92);
+  /* 深底上的浅字，与详情页整体同调 */
+  backdrop-filter: blur(12rpx);
+}
+
+.undo__t {
+  font-size: 26rpx;
+  color: #fafaf8;
+  opacity: 0.72;
+}
+
+.undo__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  /* 热区 80rpx（40px）：原先 64rpx 太矮，撤销这种"限时操作"不该点不准（B10） */
+  height: 80rpx;
+  padding: 0 $s-5;
+  border-radius: $r-full;
+  background: #fafaf8;
+  font-size: 26rpx;
+  font-weight: $w-semi;
+  color: #1c1b19;
+}

@@ -1,0 +1,211 @@
+/* ================================================================
+   随机一道浮窗样式
+
+   对照原型 photo-wall-h5 的 .spotlight：
+     全屏深色遮罩 rgba(8,8,10,.72)
+     照片卡 4:5、max-width 250px（→500rpx）、圆角 3px、重投影
+     上方一行等宽小字提示，下方菜名 + 元信息，再下面两颗按钮
+   单位换算：1px = 2rpx。
+   ================================================================ */
+@use '../../styles/tokens' as *;
+
+.spot {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 88;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 $gutter calc(#{$s-6} + max(env(safe-area-inset-bottom), 24rpx));
+  background: rgba(8, 8, 10, 0.72);
+  opacity: 1;
+  transition: opacity 0.24s ease;
+}
+
+/* 收起：整体淡出 */
+.spot--closing {
+  opacity: 0;
+}
+
+/* 顶部提示：等宽字 + 字距，很轻 */
+.spot__k {
+  margin-bottom: 28rpx;
+  font-family: $font-mono;
+  font-size: 18rpx;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.5);
+  transition: opacity 0.2s ease;
+}
+
+.spot__k--hidden {
+  opacity: 0;
+}
+
+/* ---------------- 照片 ---------------- */
+/* stage 用 grid 让新旧两张占同一格，交叉过渡不会出现空白 */
+.spot__stage {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  max-width: 500rpx;
+}
+
+.spot__stage > .spot__ph {
+  grid-area: 1 / 1;
+}
+
+.spot__ph {
+  position: relative;
+  width: 100%;
+  max-width: 500rpx;
+  /* 4:5 画框 */
+  padding-top: 125%;
+  overflow: hidden;
+  border-radius: 6rpx;
+  box-shadow: 0 60rpx 140rpx -40rpx rgba(0, 0, 0, 0.8);
+}
+
+.spot__img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* 旧张：往后退（缩小 + 淡出） */
+.spot__ph--leaving {
+  z-index: 1;
+  animation: spot-leave 0.26s cubic-bezier(0.4, 0, 0.8, 0.4) both;
+}
+
+@keyframes spot-leave {
+  from {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.86) translateY(12rpx);
+    opacity: 0;
+  }
+}
+
+/* 新张：从前面落下来（略大 → 正常） */
+.spot__ph--enter {
+  z-index: 2;
+  animation: spot-enter 0.3s cubic-bezier(0.22, 0.86, 0.2, 1) both;
+}
+
+@keyframes spot-enter {
+  from {
+    transform: scale(1.06);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ---------------- 朱砂红章 ---------------- */
+.spot__stamp {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 160rpx;
+  height: 160rpx;
+  margin-left: -80rpx;
+  margin-top: -80rpx;
+  border: 4rpx double $tomato-11;
+  border-radius: 8rpx;
+  transform: rotate(-8deg);
+  animation: stamp-in 0.3s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+}
+
+.spot__stamp-t {
+  font-family: $font-serif;
+  font-size: 44rpx;
+  font-weight: $w-semi;
+  letter-spacing: 0.08em;
+  color: $tomato-11;
+}
+
+/* 落下 + 轻微回弹 */
+@keyframes stamp-in {
+  from {
+    transform: rotate(-8deg) scale(1.6);
+    opacity: 0;
+  }
+  70% {
+    opacity: 1;
+  }
+  to {
+    transform: rotate(-8deg) scale(1);
+    opacity: 1;
+  }
+}
+
+/* ---------------- 菜名 / 元信息 ---------------- */
+.spot__name {
+  margin-top: $s-5;
+  font-family: $font-serif;
+  font-size: 48rpx;
+  font-weight: $w-semi;
+  color: #fff;
+  transition: opacity 0.18s ease;
+}
+
+.spot__sub {
+  margin-top: $s-1;
+  font-size: $t-micro;
+  color: rgba(255, 255, 255, 0.62);
+  transition: opacity 0.18s ease;
+}
+
+/* 换一张时文字也淡一下，避免硬切 */
+.spot__name--swap,
+.spot__sub--swap {
+  opacity: 0.25;
+}
+
+/* ---------------- 按钮 ---------------- */
+.spot__acts {
+  display: flex;
+  align-items: center;
+  gap: $s-2;
+  margin-top: $s-6;
+  transition: opacity 0.2s ease;
+}
+
+/* 盖章过程中按钮变淡且不可点（由 JS 的 phase 判断兜住） */
+.spot__acts--dim {
+  opacity: 0.35;
+}
+
+.spot__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 80rpx;
+  padding: 0 $s-5;
+  border: $hairline solid rgba(255, 255, 255, 0.32);
+  border-radius: 40rpx;
+  font-size: $t-base;
+  font-weight: $w-med;
+  color: #fff;
+  background: transparent;
+}
+
+.spot__btn--solid {
+  border-color: #fff;
+  color: #111110;
+  background: #fff;
+}

@@ -1,0 +1,19 @@
+{
+  "name": "@photo-wall/core",
+  "version": "1.0.0",
+  "private": true,
+  "description": "纯逻辑层：数据模型、masonry 布局算法、日期工具。零运行时依赖，Taro 与 React Native 共用。",
+  "engines": {
+    "node": ">=22.6"
+  },
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "sideEffects": false,
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "node --test test/layout.test.ts test/records.test.ts test/photos.test.ts test/persistence.test.ts test/stats.test.ts test/geo.test.ts test/photo-path.test.ts"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}

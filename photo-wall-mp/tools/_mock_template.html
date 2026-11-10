@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>城市筛选 · 三个方案</title>
+<style>
+  :root{--paper:#fdfdfc;--ink:#17171a;--ink2:#5e5e66;--ink3:#8c8c94;--hair:rgba(23,23,26,.10)}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:#e7e6e2}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+       padding:26px 30px 28px;display:flex;justify-content:center}
+  .wrap{display:flex;flex-direction:column;gap:18px}
+  h1{font-size:15px;font-weight:600;color:var(--ink);letter-spacing:.05em}
+  h1 em{font-style:normal;font-size:12px;font-weight:400;color:var(--ink3);letter-spacing:.02em;margin-left:12px}
+  .row{display:flex;gap:30px;align-items:flex-start}
+  .item{width:390px}
+  .phone{position:relative;width:390px;height:844px;border-radius:30px;overflow:hidden;
+         background:var(--paper);box-shadow:0 16px 44px rgba(23,23,26,.18);border:.5px solid rgba(23,23,26,.12)}
+  .shot{position:absolute;inset:0;background-image:url(__BG64__);background-size:cover;background-position:top center}
+  .cap{margin-top:12px;line-height:1.5}
+  .cap b{font-size:13.5px;color:var(--ink);font-weight:600;letter-spacing:.02em}
+  .cap span{display:block;margin-top:2px;font-size:11.5px;color:var(--ink3);letter-spacing:.01em}
+  .mono{font-family:"SF Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;font-variant-numeric:tabular-nums}
+
+  /* ---------------- A · 顶栏下拉菜单 ---------------- */
+  .dd{position:absolute;top:98px;right:14px;width:250px;background:var(--paper);
+      border:.5px solid var(--hair);border-radius:16px;padding:6px;max-height:322px;overflow:hidden;
+      box-shadow:0 18px 44px rgba(23,23,26,.20)}
+  .dd-h{padding:7px 12px 9px;font-size:10px;letter-spacing:.14em;color:var(--ink3)}
+  .dd-r{display:flex;align-items:center;justify-content:space-between;height:42px;padding:0 12px;
+        border-radius:10px;font-size:14px;color:var(--ink);letter-spacing:.01em}
+  .dd-r em{font-style:normal;font-size:11px;color:var(--ink3)}
+  .dd-r--on{background:var(--ink);color:var(--paper)}
+  .dd-r--on em{color:rgba(253,253,252,.60)}
+  .dd-fade{position:absolute;left:0;right:0;bottom:0;height:24px;
+           background:linear-gradient(to bottom,rgba(253,253,252,0),var(--paper))}
+
+  /* ---------------- B · 底部抽屉 ---------------- */
+  .dim{position:absolute;inset:0;background:rgba(23,23,26,.32)}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:var(--paper);
+         border-radius:22px 22px 0 0;border-top:.5px solid var(--hair);
+         box-shadow:0 -14px 44px rgba(23,23,26,.16);padding:10px 14px 26px}
+  .handle{width:36px;height:4px;border-radius:2px;background:#dcdcd6;margin:0 auto 14px}
+  .sheet-h{font-size:10px;letter-spacing:.14em;color:var(--ink3);padding:0 4px 10px}
+  .gm{position:relative;max-height:292px;overflow:hidden}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .cell{display:flex;align-items:center;justify-content:space-between;height:46px;
+        padding:0 14px;border:.5px solid var(--hair);border-radius:12px;
+        font-size:14px;color:var(--ink2);letter-spacing:.01em}
+  .cell em{font-style:normal;font-size:11px;color:var(--ink3)}
+  .cell--on{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+  .cell--on em{color:rgba(253,253,252,.60)}
+  .gm-fade{position:absolute;left:0;right:0;bottom:0;height:26px;
+           background:linear-gradient(to bottom,rgba(253,253,252,0),var(--paper))}
+
+  /* ---------------- C · 原生 Picker ---------------- */
+  .dim--hi{background:rgba(0,0,0,.40)}
+  .picker{position:absolute;left:0;right:0;bottom:0;background:#f7f7f8;
+          border-radius:12px 12px 0 0;padding-bottom:22px;box-shadow:0 -10px 40px rgba(0,0,0,.22)}
+  .pbar{display:flex;align-items:center;justify-content:space-between;height:46px;padding:0 16px;
+        border-bottom:.5px solid rgba(0,0,0,.08);font-size:15px;color:#007aff}
+  .pbar b{font-size:13px;font-weight:600;color:#1c1c1e;letter-spacing:.01em}
+  .wheel{position:relative;height:200px;overflow:hidden}
+  .wrow{display:flex;align-items:center;justify-content:center;height:40px;
+        font-size:20px;color:rgba(0,0,0,.26);letter-spacing:.02em}
+  .wrow--sel{color:#1c1c1e;font-size:21px}
+  .wsel{position:absolute;left:0;right:0;top:80px;height:40px;background:rgba(0,0,0,.045);
+        border-top:.5px solid rgba(0,0,0,.10);border-bottom:.5px solid rgba(0,0,0,.10)}
+</style></head>
+<body>
+<div class="wrap">
+  <h1>城市筛选 · 三个优化方案<em>同一面墙上的效果对比（全部 12 张）</em></h1>
+  <div class="row">
+
+    <!-- A -->
+    <div class="item">
+      <div class="phone">
+        <div class="shot"></div>
+        <div class="dd">
+          <div class="dd-h">按城市看墙 · 选完墙自己重排</div>
+          <div class="dd-r dd-r--on"><span>全部</span><em class="mono">12</em></div>
+          <div class="dd-r"><span>成都</span><em class="mono">3</em></div>
+          <div class="dd-r"><span>乐山</span><em class="mono">2</em></div>
+          <div class="dd-r"><span>北京</span><em class="mono">2</em></div>
+          <div class="dd-r"><span>上海</span><em class="mono">1</em></div>
+          <div class="dd-r"><span>武汉</span><em class="mono">1</em></div>
+          <div class="dd-r"><span>长沙</span><em class="mono">1</em></div>
+          <div class="dd-r"><span>厦门</span><em class="mono">1</em></div>
+          <div class="dd-r"><span>未记</span><em class="mono">1</em></div>
+          <div class="dd-fade"></div>
+        </div>
+      </div>
+      <div class="cap"><b>A · 顶栏下拉菜单</b>
+        <span>纸色卡片锚在「城市」下，一行一城竖滑；只盖右上一块，墙其余全可见</span></div>
+    </div>
+
+    <!-- B -->
+    <div class="item">
+      <div class="phone">
+        <div class="shot"></div>
+        <div class="dim"></div>
+        <div class="sheet">
+          <div class="handle"></div>
+          <div class="sheet-h">按城市看墙 · 选完墙自己重排</div>
+          <div class="gm">
+            <div class="grid">
+              <div class="cell cell--on"><span>全部</span><em class="mono">12</em></div>
+              <div class="cell"><span>成都</span><em class="mono">3</em></div>
+              <div class="cell"><span>乐山</span><em class="mono">2</em></div>
+              <div class="cell"><span>北京</span><em class="mono">2</em></div>
+              <div class="cell"><span>上海</span><em class="mono">1</em></div>
+              <div class="cell"><span>武汉</span><em class="mono">1</em></div>
+              <div class="cell"><span>长沙</span><em class="mono">1</em></div>
+              <div class="cell"><span>厦门</span><em class="mono">1</em></div>
+              <div class="cell"><span>未记</span><em class="mono">1</em></div>
+            </div>
+            <div class="gm-fade"></div>
+          </div>
+        </div>
+      </div>
+      <div class="cap"><b>B · 底部抽屉（两列网格）</b>
+        <span>容量最大，一屏二十多项；打开时盖下半屏，但点一下就关、可下滑收起</span></div>
+    </div>
+
+    <!-- C -->
+    <div class="item">
+      <div class="phone">
+        <div class="shot"></div>
+        <div class="dim dim--hi"></div>
+        <div class="picker">
+          <div class="pbar"><span>取消</span><b>选择城市</b><span>完成</span></div>
+          <div class="wheel">
+            <div class="wrow">全部 12</div>
+            <div class="wrow">成都 3</div>
+            <div class="wrow wrow--sel">乐山 2</div>
+            <div class="wrow">北京 2</div>
+            <div class="wrow">上海 1</div>
+            <div class="wsel"></div>
+          </div>
+        </div>
+      </div>
+      <div class="cap"><b>C · 原生 Picker（系统滚轮）</b>
+        <span>页面零占屏、实现量最小、最「微信」；代价是离纸色风格最远</span></div>
+    </div>
+
+  </div>
+</div>
+</body></html>

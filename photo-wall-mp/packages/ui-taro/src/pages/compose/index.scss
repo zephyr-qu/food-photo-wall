@@ -1,0 +1,330 @@
+/* ================================================================
+   贴一张 / 编辑 · 样式
+
+   表单用「一条 0.5px 分隔线 + 一行标签 + 一行输入」的窄排版，
+   不用卡片也不用浮起输入框：这是一次短填写，字段本来就少，
+   给它容器反而显得手续多。
+   ================================================================ */
+@use '../../styles/tokens' as *;
+
+.cp {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: $bg-app;
+}
+
+.cp__scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+/* 底部留出操作条的高度，最后一项不被压住（含安全区兜底） */
+.cp__body {
+  padding: 0 $gutter calc(88rpx + #{$s-3} * 2 + max(env(safe-area-inset-bottom), 24rpx));
+}
+
+/* ---------------- 字段 ---------------- */
+/* 分隔线画在字段底部，最后一个字段不画 —— 少一条多余的线。
+   原型 .field 的 padding 是 12px 0 → 24rpx 0。 */
+.field {
+  padding: 24rpx 0;
+  border-bottom: $hairline solid $border;
+}
+
+.field--last {
+  border-bottom: 0;
+}
+
+.field__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: $s-2;
+}
+
+/* 标签：等宽小字 + 拉开字距（原型 .field__k：
+   9px → 18rpx、letter-spacing 0.12em、颜色 var(--ink-3)）。
+   它说明的是下面输入的内容，所以靠字号和颜色退后，而不是靠加粗。 */
+.field__label {
+  display: block;
+  margin-bottom: 12rpx;
+  font-family: $font-mono;
+  font-size: 18rpx;
+  letter-spacing: 0.12em;
+  color: $text-3;
+}
+
+.field__count {
+  font-family: $font-mono;
+  font-size: 18rpx;
+  letter-spacing: 0.04em;
+  color: $text-3;
+  @include tabular;
+}
+
+/* 输入框（原型 .field input：15px → 30rpx） */
+.field__input {
+  width: 100%;
+  height: 64rpx;
+  font-size: 30rpx;
+  letter-spacing: 0.01em;
+  color: $text-1;
+  box-sizing: border-box;
+}
+
+/* 第一项是整页的重点：给大一号的字，视觉上就分出主次。
+   原型里菜名这一项并没有特别加大，但它是唯一必填项，
+   这里保留加大 —— 这是 Taro 版刻意的取舍，不影响其余字段的一致性。 */
+.field__input--lead {
+  height: 80rpx;
+  font-size: $t-display;
+  font-weight: $w-med;
+}
+
+.field__area {
+  width: 100%;
+  min-height: 120rpx;
+  font-size: 30rpx;
+  line-height: 1.7;
+  color: $text-1;
+  box-sizing: border-box;
+}
+
+/* 占位文字用最浅一档，和已填内容分得开 */
+.field__ph {
+  color: $text-3;
+}
+
+/* 城市：只选不填的「下拉」。和输入框同高，点开才是两级城市表 */
+.select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64rpx;
+}
+
+.select__v {
+  font-size: 30rpx;
+  letter-spacing: 0.01em;
+  color: $text-1;
+}
+
+.select__v--ph {
+  color: $text-3;
+}
+
+.select__chev {
+  font-size: 26rpx;
+  color: $text-3;
+}
+
+.field__err {
+  display: block;
+  margin-top: $s-1;
+  font-size: $t-micro;
+  color: $accent-text;
+}
+
+/* 行内的轻量操作（看大图 / 换回默认）：
+   只做文字，不加边框，避免和底部主按钮抢「按钮」的身份 */
+.link {
+  font-size: $t-micro;
+  color: $text-2;
+}
+
+/* ---------------- 照片 ---------------- */
+/* 横向缩略图条：一行方块，最后一个是「＋选照片」。
+   160rpx = 80px，正好一屏能看 4~5 张（上限也是 5 张）。 */
+.shots {
+  margin-top: $s-2;
+  white-space: nowrap;
+}
+
+.shots__row {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: $s-2;
+  padding-bottom: 4rpx;
+}
+
+/* 一张照片的方块 */
+.shot {
+  position: relative;
+  flex: 0 0 auto;
+  width: 160rpx;
+  height: 160rpx;
+  overflow: hidden;
+  border-radius: $r-photo;
+  background: $bg-element;
+}
+
+.shot__img {
+  width: 100%;
+  height: 100%;
+}
+
+/* 「＋选照片」方块：虚线边 + 浅底，跟真实照片区分开 */
+.shot--add {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4rpx;
+  border: $hairline dashed $border-strong;
+  background: $bg-subtle;
+}
+
+.shot__plus {
+  font-size: 44rpx;
+  line-height: 1;
+  color: $text-2;
+}
+
+.shot__addt {
+  font-size: 20rpx;
+  color: $text-3;
+}
+
+/* 右上角的删除叉：视觉 40rpx，但点击区扩到 72rpx（36px）——
+   以前 40rpx（20px）的热区根本点不准（B10）。
+   外层透明、内层才是深色小方块，所以观感不变。 */
+.shot__x {
+  position: absolute;
+  right: 0;
+  top: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  width: 72rpx;
+  height: 72rpx;
+}
+
+.shot__x-in {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40rpx;
+  height: 40rpx;
+  border-bottom-left-radius: $r-photo;
+  background: $black-a6;
+  font-size: 26rpx;
+  line-height: 1;
+  color: #fff;
+}
+
+/* 提交期间禁用删除叉（handler 里也有同步闸，这里只做视觉提示） */
+.shot__x--off {
+  opacity: 0.35;
+}
+
+/* 左下角「封面」角标：第 1 张就是服务端认的 photos[0] */
+.shot__tag {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  padding: 2rpx 10rpx;
+  border-top-right-radius: $r-photo;
+  background: $black-a6;
+  font-size: 18rpx;
+  line-height: 1.6;
+  color: $sand-1;
+}
+
+.shots__hint {
+  display: block;
+  margin-top: $s-2;
+  font-size: $t-micro;
+  color: $text-3;
+}
+
+/* ---------------- 什么时候吃的（补记） ---------------- */
+/* 两个并排的格子：左边日期、右边时刻。
+   它们和「店名 / 城市」是同一类东西 —— 一个可点开的值，
+   所以沿用 .select 的排版语言（值在上、说明在下）。 */
+.when {
+  display: flex;
+  gap: $s-4;
+}
+
+.when__pick {
+  flex: 1;
+  min-width: 0;
+}
+
+.when__cell {
+  display: flex;
+  align-items: baseline;
+  gap: $s-2;
+  height: 64rpx;
+}
+
+.when__v {
+  font-size: 30rpx;
+  letter-spacing: 0.01em;
+  color: $text-1;
+  @include tabular;
+}
+
+.when__k {
+  font-size: $t-micro;
+  color: $text-3;
+}
+
+/* ---------------- 评分 ---------------- */
+/* 圆点由 components/RatingDots 渲染（尺寸/配色在那边），
+   这里只管它和「N 分」文案的排布 */
+.rate {
+  display: flex;
+  align-items: center;
+  gap: $s-2;
+  margin-top: $s-2;
+}
+
+.rate__v {
+  margin-left: $s-1;
+  font-size: $t-micro;
+  color: $text-3;
+  @include tabular;
+}
+
+/* ---------------- 底部 ---------------- */
+.bar__main {
+  flex: 1;
+}
+
+/* ---------------- 接后端后新增 ----------------
+   编辑态要先拉记录（可能失败）、提交时可能在上传照片，两个状态都要有反馈。 */
+.cp--fail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: $s-4;
+  min-height: 100vh;
+  padding: 0 $s-5;
+}
+
+.cp__fail-t {
+  font-size: 28rpx;
+  color: $text-2;
+  text-align: center;
+}
+
+.cp--loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 0 $s-5;
+}
+
+.cp__loading-t {
+  font-size: 28rpx;
+  color: $text-2;
+}
+
+.btn--busy {
+  opacity: 0.72;
+}
