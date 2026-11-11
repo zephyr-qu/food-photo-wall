@@ -2,6 +2,7 @@
   "name": "@photo-wall/server",
   "version": "1.0.0",
   "private": true,
+  "license": "Apache-2.0",
   "type": "module",
   "description": "照片墙 mock 后端（零运行时依赖，Node 原生 ESM）",
   "scripts": {

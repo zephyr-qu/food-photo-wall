@@ -2,6 +2,7 @@
   "name": "@photo-wall/ui-taro",
   "version": "1.0.0",
   "private": true,
+  "license": "Apache-2.0",
   "description": "X师傅美食记 · 照片墙（Taro 小程序 + H5）",
   "engines": {
     "node": ">=22.6"

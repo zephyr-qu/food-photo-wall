@@ -2,6 +2,7 @@
   "name": "photo-wall-api",
   "version": "1.0.0",
   "private": true,
+  "license": "Apache-2.0",
   "type": "module",
   "description": "X师傅美食记 · 照片墙 后端（Hono 实现，对齐 docs/api 契约）",
   "engines": {

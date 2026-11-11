@@ -42,4 +42,4 @@ npm test
 
 ## License
 
-MIT — 见 [LICENSE](./LICENSE)。
+Apache License 2.0 — 见 [LICENSE](./LICENSE)。Copyright (c) 2026 photo-wall contributors.

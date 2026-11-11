@@ -2,6 +2,7 @@
   "name": "@photo-wall/core",
   "version": "1.0.0",
   "private": true,
+  "license": "Apache-2.0",
   "description": "纯逻辑层：数据模型、masonry 布局算法、日期工具。零运行时依赖，Taro 与 React Native 共用。",
   "engines": {
     "node": ">=22.6"
