@@ -74,8 +74,8 @@ export function placeOf(r: Pick<FoodRecord, 'city' | 'district'>): string {
   const city = r.city || '';
   const district = r.district || '';
   const province = provinceOf(city);
-  const head = province && province !== city ? `${province} · ${city}` : city;
-  if (head && district) return `${head} · ${district}`;
+  const head = province && province !== city ? `${province}${SEP}${city}` : city;
+  if (head && district) return `${head}${SEP}${district}`;
   if (head) return head;
   return '没有城市';
 }

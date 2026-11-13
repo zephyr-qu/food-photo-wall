@@ -10,7 +10,7 @@
    但"五分 3 道"和实际记录对不上会显得整面墙都不可信。
    ================================================================ */
 import type { FoodRecord } from './types/domain.ts';
-import { citiesInUse, mmdd } from './records.ts';
+import { citiesInUse, mmdd, SEP } from './records.ts';
 
 /** 统计的每一行 */
 export interface StatRow {
@@ -97,12 +97,12 @@ export function statRows(stats: WallStats): StatRow[] {
   ];
 }
 
-/** 随机一道浮窗里的一行元信息：店 · 城市 · 几分 · 日期 */
+/** 随机一道浮窗里的一行元信息：店、城市、几分、日期，用 SEP 隔开 */
 export function spotlightMeta(r: FoodRecord): string {
   const bits: string[] = [];
-  const place = [r.shop, r.city].filter(Boolean).join(' · ');
+  const place = [r.shop, r.city].filter(Boolean).join(SEP);
   if (place) bits.push(place);
   bits.push(r.rating ? `${r.rating} 分` : '未评');
   bits.push(mmdd(r.at));
-  return bits.join(' · ');
+  return bits.join(SEP);
 }

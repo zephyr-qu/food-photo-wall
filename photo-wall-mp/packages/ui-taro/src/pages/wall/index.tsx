@@ -32,7 +32,7 @@ import {
   jumpToMonth,
   writeErrorText,
 } from '../../data/store';
-import { photoOf, placeOf } from '@photo-wall/core';
+import { photoOf, placeOf, joinBits, SEP } from '@photo-wall/core';
 import { layoutWall } from '@photo-wall/core';
 import EmptyState from '../../components/EmptyState';
 import StatsSheet from '../../components/StatsSheet';
@@ -58,9 +58,8 @@ const MONTH_CN = [
 const monthLabel = (key: string): string =>
   MONTH_CN[parseInt(key.slice(5, 7), 10) - 1] + '月';
 
-/** 图注副行：店 · 省·市（和原型 records.js 的 metaOf 一致，没店名时给占位） */
-const metaText = (r: FoodRecord): string =>
-  [r.shop, placeOf(r)].filter(Boolean).join(' · ') || '没记店名';
+/** 图注副行：店、省、市（没店名时给占位）。段与段之间用 SEP，不插符号 */
+const metaText = (r: FoodRecord): string => joinBits([r.shop, placeOf(r)], '没记店名');
 
 export default function WallPage() {
   const { records, status, error, hasMore, total, filterCity, offline } = useWall();
@@ -419,7 +418,7 @@ export default function WallPage() {
                   >
                     <Text className="month__m">{monthLabel(sec.key)}</Text>
                     <Text className="month__n">
-                      {sec.key.slice(0, 4)} · {sec.count} 张
+                      {sec.key.slice(0, 4)}{SEP}{sec.count} 张
                     </Text>
                     <View className="month__i" />
                   </View>
@@ -465,7 +464,7 @@ export default function WallPage() {
         {showEnd && (
           <View className="wall-end">
             <Text className="wall-end__t">
-              {filterCity !== null ? '这个城市就这些了' : '到底了 · 共 ' + total + ' 张'}
+              {filterCity !== null ? '这个城市就这些了' : '到底了，共 ' + total + ' 张'}
             </Text>
           </View>
         )}

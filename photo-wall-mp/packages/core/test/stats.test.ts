@@ -163,19 +163,19 @@ test('真实 12 条：统计数字与预置数据吻合', () => {
 
 /* ---------------- spotlightMeta ---------------- */
 
-test('spotlightMeta：店 · 城市 · 几分 · 日期', () => {
+test('spotlightMeta：店、城市、几分、日期，段间只用 SEP', () => {
   const meta = spotlightMeta(rec('a', {
     shop: '马旺子川小馆',
     city: '成都',
     rating: 4,
     at: '2026-10-09T12:30',
   }));
-  assert.equal(meta, '马旺子川小馆 · 成都 · 4 分 · 10.09');
+  assert.equal(meta, ['马旺子川小馆', '成都', '4 分', '10.09'].join('\u00a0\u00a0'));
 });
 
 test('spotlightMeta：没店没城市时不留空段', () => {
   const meta = spotlightMeta(rec('a', { shop: null, city: null, rating: 3 }));
-  assert.equal(meta, '3 分 · 10.09');
+  assert.equal(meta, ['3 分', '10.09'].join('\u00a0\u00a0'));
   assert.ok(!meta.includes('undefined'));
 });
 
