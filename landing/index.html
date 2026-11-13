@@ -1,0 +1,1012 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X师傅美食记｜值得记住的一顿饭</title>
+<meta name="description" content="吃过的每一样，拍张照片、写句话，连店家、城市、几分一起记下。微信小程序「X师傅美食记」，一屏就是一面属于你的美食墙。">
+<meta name="theme-color" content="#fdfdfc">
+<meta property="og:title" content="X师傅美食记｜值得记住的一顿饭">
+<meta property="og:description" content="吃过的每一样，拍张照片、写句话，连店家、城市、几分一起记下。">
+<meta property="og:type" content="website">
+<meta property="og:image" content="img/tiantianmian.jpg">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23e54d2e'/%3E%3Ctext x='16' y='24' font-size='20' font-family='serif' fill='%23fdfdfc' text-anchor='middle'%3E%E8%AE%B0%3C/text%3E%3C/svg%3E">
+
+<!--
+  落地页 / 单文件静态页（无构建、无外部请求）
+  ────────────────────────────────────────────────────────────
+  部署：把整个 landing/ 目录丢到任意静态托管即可（图片走 img/ 相对路径）。
+  小程序码：把二维码存成 landing/assets/qr.png，页面会自动换上；
+           没有该文件时显示一个虚线占位框，不会伪造二维码。
+  改文案：本文件自上而下按「首屏 → 这面墙 → 怎么记 → 一道菜 → 随机
+         → 归属 → 常见问题 → 页脚」排列，每段开头有注释。
+  界面截图：img/app-wall.jpg、img/app-compose.jpg 是真实 H5 产物截图
+           （390×844、2 倍图，12 条演示记录），不是画的示意图。要重拍：
+             cd photo-wall-mp && npm run build:h5
+             node server/src/index.js                 # mock 后端，8788，DEMO_SEED=0
+             静态托管 packages/ui-taro/dist-web，用 390×844 视口打开
+             http://localhost:5195/?api=http://127.0.0.1:8788
+           截「首屏」与「贴一张」两页，存成 jpg（quality 80）即可。
+-->
+
+<style>
+/* ============================================================
+   设计令牌 —— 与小程序同源
+   sand 纸面 / tomato 朱砂 / ink 墨；边框一律 0.5–1px 细线，
+   不用阴影堆叠，靠留白和字重分层。数字用等宽，标题用宋体。
+   ============================================================ */
+:root{
+  --paper:#fdfdfc;
+  --paper-2:#f9f9f8;
+  --sand-3:#f1f0ef;
+  --sand-4:#e9e8e6;
+  --rule:#dad9d6;
+  --rule-strong:#cfceca;
+  --ink:#21201c;
+  --ink-2:#63635e;
+  --ink-3:#82827c;
+  --tomato:#e54d2e;
+  --tomato-text:#c33a18;
+  --ink-bg:#111110;
+  --ink-bg-2:#191918;
+  --ink-rule:#3b3a37;
+  --ink-text:#eeeeec;
+  --ink-text-2:#b5b3ad;
+  --serif:'Songti SC','Songti TC','STSong','Noto Serif SC','Source Han Serif SC','SimSun',serif;
+  --sans:-apple-system,BlinkMacSystemFont,'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans SC',sans-serif;
+  --mono:'SF Mono','Menlo','Consolas','Roboto Mono',monospace;
+  --max:1160px;
+  --gutter:clamp(20px,5vw,56px);
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+img{display:block;max-width:100%}
+a{color:inherit}
+::selection{background:rgba(229,77,46,.2)}
+:focus-visible{outline:2px solid var(--tomato);outline-offset:3px;border-radius:2px}
+
+/* 纸面颗粒：一层极淡的噪点，让大块留白不像屏幕 */
+body::after{
+  content:'';position:fixed;inset:0;z-index:80;pointer-events:none;opacity:.045;
+  mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:140px 140px;
+}
+
+.wrap{width:100%;max-width:var(--max);margin:0 auto;padding:0 var(--gutter)}
+.skip{
+  position:absolute;left:-9999px;top:0;z-index:100;background:var(--ink);color:var(--paper);
+  padding:10px 16px;text-decoration:none;font-size:14px;
+}
+.skip:focus{left:12px;top:12px}
+
+/* ---------------- 首屏顶栏 ---------------- */
+.masthead{
+  position:sticky;top:0;z-index:50;
+  background:rgba(253,253,252,.88);
+  -webkit-backdrop-filter:saturate(1.4) blur(12px);
+  backdrop-filter:saturate(1.4) blur(12px);
+  border-bottom:1px solid var(--rule);
+}
+.masthead__in{display:flex;align-items:center;gap:16px;height:64px}
+.brand{
+  display:flex;align-items:center;gap:10px;margin-right:auto;
+  font-family:var(--serif);font-size:19px;font-weight:700;letter-spacing:.01em;
+  text-decoration:none;white-space:nowrap;padding:7px 0;
+}
+.brand__seal{
+  display:grid;place-items:center;width:26px;height:26px;flex:none;
+  border:1.5px solid var(--tomato);border-radius:4px;color:var(--tomato);
+  font-family:var(--serif);font-size:15px;line-height:1;transform:rotate(-6deg);
+  background-image:repeating-linear-gradient(45deg,rgba(229,77,46,.09) 0 2px,transparent 2px 4px);
+}
+.nav{display:flex;align-items:center;gap:clamp(14px,2.2vw,26px);font-size:14.5px;color:var(--ink-2)}
+.nav a{text-decoration:none;padding:4px 0;border-bottom:1px solid transparent;transition:color .18s,border-color .18s}
+.nav a:hover{color:var(--ink);border-bottom-color:var(--ink)}
+.progress{
+  position:absolute;left:0;bottom:-1px;height:2px;width:100%;background:var(--tomato);
+  transform:scaleX(0);transform-origin:left center;will-change:transform;
+}
+@media (max-width:880px){
+  .nav{display:none}
+  .masthead__in{height:58px;gap:10px}
+}
+
+/* ---------------- 按钮 ---------------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  height:48px;padding:0 22px;border:1px solid transparent;border-radius:7px;
+  font-family:var(--sans);font-size:15.5px;font-weight:600;text-decoration:none;
+  cursor:pointer;white-space:nowrap;
+  transition:background .18s,color .18s,border-color .18s,transform .18s var(--ease);
+}
+.btn--primary{background:var(--ink);color:var(--paper)}
+.btn--primary:hover{background:#000;transform:translateY(-1px)}
+.btn--quiet{border-color:var(--rule-strong);color:var(--ink);background:transparent}
+.btn--quiet:hover{background:var(--sand-4);border-color:var(--ink-3)}
+.btn--sm{height:36px;padding:0 15px;font-size:13.5px;border-radius:999px}
+.btn--ink{background:var(--paper);color:var(--ink)}
+.btn--ink:hover{background:#fff;transform:translateY(-1px)}
+
+/* ---------------- 通用文字层级 ---------------- */
+.eyebrow{
+  display:flex;align-items:center;gap:10px;margin:0;
+  font-family:var(--mono);font-size:11.5px;letter-spacing:.12em;
+  color:var(--ink-2);text-transform:uppercase;
+}
+.eyebrow::before{content:'';width:26px;height:1px;background:var(--rule-strong);flex:none}
+.eyebrow__dot{width:5px;height:5px;border-radius:50%;background:var(--tomato);flex:none}
+h1,h2,h3{text-wrap:balance}
+
+/* ---------------- 首屏 ---------------- */
+.hero{
+  position:relative;overflow:hidden;
+  padding:clamp(24px,3.6vw,48px) 0 clamp(44px,6vw,72px);
+}
+/* 稿纸横线：只在首屏，向上淡出 */
+.hero__rule{
+  position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:repeating-linear-gradient(to bottom,transparent 0 31px,rgba(33,32,28,.045) 31px 32px);
+  -webkit-mask-image:linear-gradient(to bottom,#000 0,rgba(0,0,0,.45) 55%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 0,rgba(0,0,0,.45) 55%,transparent 100%);
+}
+.hero__grid{
+  position:relative;z-index:1;
+  display:grid;grid-template-columns:minmax(0,1.04fr) minmax(0,.96fr);
+  gap:clamp(28px,5vw,60px);align-items:center;
+}
+.hero__copy{position:relative}
+.display{
+  margin:16px 0 0;
+  font-family:var(--serif);font-weight:700;
+  font-size:clamp(44px,7vw,86px);line-height:1.02;letter-spacing:-.015em;
+}
+.display em{
+  font-style:normal;white-space:nowrap;
+  /* 荧光笔式的朱砂底纹：用背景色带压在字的下半截，随字宽从左往右划出来。
+     不用伪元素 + 负 z-index：内联框上的那一层会在某些渲染路径里留出 1px 描边。 */
+  background-image:linear-gradient(rgba(229,77,46,.19),rgba(229,77,46,.19));
+  background-repeat:no-repeat;
+  background-position:left calc(100% - .16em);
+  background-size:0 .46em;
+  animation:marker .78s .45s var(--ease) both;
+}
+@keyframes marker{to{background-size:100% .46em}}
+.lede{
+  max-width:30em;margin:22px 0 0;
+  font-size:clamp(16px,1.55vw,18.5px);line-height:1.85;color:var(--ink-2);
+}
+.lede b{color:var(--ink);font-weight:600}
+.cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:30px}
+.micro{
+  margin:16px 0 0;font-family:var(--mono);font-size:11px;
+  letter-spacing:.06em;color:var(--ink-2);
+}
+
+/* ---------------- 首屏照片拼贴 ---------------- */
+.collage-wrap{position:relative}
+.collage{columns:2;column-gap:clamp(10px,1.6vw,16px);margin:0}
+.collage figure{
+  position:relative;margin:0 0 clamp(10px,1.6vw,16px);break-inside:avoid;
+  transform:rotate(var(--r,0deg));
+  transition:transform .45s var(--ease);
+}
+.collage figure:hover{transform:rotate(0deg) translateY(-3px);z-index:3}
+.collage img{
+  width:100%;height:auto;border-radius:3px;
+  box-shadow:0 1px 0 rgba(33,32,28,.10),0 12px 24px -18px rgba(33,32,28,.55);
+}
+.collage figcaption{
+  margin-top:5px;font-family:var(--mono);font-size:10px;letter-spacing:.03em;
+  color:var(--ink-2);
+}
+.collage figcaption b{font-weight:600;color:var(--ink);margin-right:6px}
+/* 胶带：贴在两三张照片的顶边 */
+.tape::before{
+  content:'';position:absolute;top:-9px;left:50%;width:min(66px,60%);height:19px;
+  transform:translateX(-50%) rotate(-1.6deg);
+  background:rgba(233,225,201,.82);
+  border-left:1px solid rgba(33,32,28,.06);border-right:1px solid rgba(33,32,28,.06);
+  box-shadow:0 1px 2px rgba(33,32,28,.07);
+}
+/* 纸条：一条记录的全部字段 */
+.slip{
+  break-inside:avoid;margin:0 0 clamp(12px,1.8vw,18px);padding:13px 14px;
+  background:#fffefa;border:1px solid var(--rule);border-radius:2px;
+  transform:rotate(-1.3deg);
+  box-shadow:0 1px 0 rgba(33,32,28,.06),0 10px 22px -18px rgba(33,32,28,.5);
+}
+.slip__t{font-family:var(--serif);font-size:16px;font-weight:700;line-height:1.45}
+.slip__n{
+  margin:8px 0 0;font-family:var(--serif);font-size:12.5px;line-height:1.65;color:var(--ink-2);
+}
+.slip__m{
+  display:flex;align-items:baseline;justify-content:space-between;gap:8px;
+  margin-top:10px;padding-top:8px;
+  border-top:1px solid var(--rule-2,#e9e8e6);
+  font-family:var(--mono);font-size:9.5px;letter-spacing:.02em;color:var(--ink-3);
+}
+.slip__m span{white-space:nowrap}
+.slip__m span:first-child{overflow:hidden;text-overflow:ellipsis}
+.slip__m span:last-child{flex:none}
+
+/* 首屏下方的示例数据条 */
+.strip{
+  position:relative;z-index:1;
+  display:flex;flex-wrap:wrap;align-items:flex-end;gap:clamp(20px,4vw,54px);
+  margin:clamp(34px,5.5vw,60px) 0 0;padding-top:18px;border-top:1px solid var(--rule);
+}
+.strip__item b{
+  display:block;font-family:var(--mono);font-size:clamp(20px,2.4vw,26px);
+  font-weight:600;letter-spacing:-.02em;line-height:1.1;
+}
+.strip__item span{
+  display:block;margin-top:4px;font-family:var(--mono);font-size:10px;
+  letter-spacing:.1em;color:var(--ink-2);
+}
+.strip__note{
+  margin:0 0 2px auto;font-family:var(--mono);font-size:10px;
+  letter-spacing:.05em;color:var(--ink-3);text-align:right;
+}
+@media (max-width:600px){
+  .strip{gap:18px 26px}
+  .strip__note{margin:0;text-align:left;flex-basis:100%}
+}
+
+/* ---------------- 通用区块 ---------------- */
+.band{padding:clamp(60px,9vw,118px) 0;position:relative;scroll-margin-top:72px}
+.band--sub{background:var(--paper-2);border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.band--ink{background:var(--ink-bg);color:var(--ink-text)}
+.band--ink .eyebrow{color:var(--ink-text-2)}
+.band--ink .eyebrow::before{background:var(--ink-rule)}
+.title{
+  margin:14px 0 0;font-family:var(--serif);font-weight:700;
+  font-size:clamp(30px,4.3vw,52px);line-height:1.14;letter-spacing:-.01em;
+}
+.band--ink .title{color:#fdfdfc}
+.sub{
+  margin:18px 0 0;max-width:40em;color:var(--ink-2);
+  font-size:clamp(15.5px,1.5vw,17.5px);line-height:1.85;
+}
+
+/* 段落行数多时容易留下特别短的一行：让浏览器把各行匀一匀。
+   不支持 text-wrap:balance 的浏览器退回普通换行，结果仍然正确。 */
+.sub,.points p{text-wrap:balance}
+.split{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
+  gap:clamp(30px,6vw,84px);align-items:center;
+  margin-top:clamp(34px,5vw,64px);
+}
+.split--rev{grid-template-columns:minmax(0,1.05fr) minmax(0,1fr)}
+@media (max-width:900px){
+  .split,.split--rev{grid-template-columns:1fr;gap:34px}
+}
+
+/* ---------------- 编号要点 ---------------- */
+.points{list-style:none;margin:0;padding:0}
+.points li{
+  display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;
+  padding:20px 0;border-top:1px solid var(--rule);
+}
+.points li:first-child{border-top:0;padding-top:0}
+.points__num{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;
+  color:var(--tomato-text);padding-top:6px;
+}
+.points h3{margin:0;font-size:17.5px;font-weight:600;letter-spacing:.01em;line-height:1.4}
+.points p{margin:6px 0 0;font-size:15px;line-height:1.75;color:var(--ink-2)}
+.band--ink .points li{border-top-color:var(--ink-rule)}
+.band--ink .points h3{color:#fdfdfc}
+.band--ink .points p{color:var(--ink-text-2)}
+
+/* ---------------- 手机截图 ---------------- */
+.phone-stage{display:grid;place-items:center}
+.phone{
+  position:relative;width:min(316px,78vw);padding:9px;
+  background:var(--sand-3);border:1px solid var(--rule);border-radius:32px;
+  box-shadow:0 2px 0 rgba(33,32,28,.05),0 34px 60px -44px rgba(33,32,28,.75);
+  margin:0;
+}
+.phone__screen{
+  overflow:hidden;background:var(--paper);
+  border:1px solid var(--rule);border-radius:24px;
+}
+.phone__screen img{display:block;width:100%;height:auto}
+
+@media (max-width:900px){
+  .hero__grid{grid-template-columns:1fr;gap:38px}
+  .display{font-size:clamp(40px,11vw,64px)}
+  /* 单列时拼贴横向铺开：三列才不会把首屏拉成两屏高 */
+  .collage{columns:3}
+}
+@media (max-width:620px){.collage{columns:2}}
+.sec-head{max-width:48em}
+
+
+/* ---------------- 深色 / 一道菜 ---------------- */
+.dish{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);gap:clamp(26px,4vw,56px);align-items:center}
+@media (max-width:900px){.dish{grid-template-columns:1fr;gap:34px}}
+.dish__photo{
+  margin:0;padding:9px;background:var(--ink-bg-2);
+  border:1px solid var(--ink-rule);border-radius:4px;
+}
+.dish__photo img{width:100%;height:auto;border-radius:2px}
+.dish__cap{
+  display:flex;justify-content:space-between;gap:12px;
+  padding:10px 3px 2px;font-family:var(--mono);font-size:10px;
+  letter-spacing:.04em;color:var(--ink-text-2);
+}
+.dish__name{
+  margin:16px 0 0;font-family:var(--serif);font-size:clamp(30px,3.4vw,40px);
+  font-weight:700;line-height:1.2;color:#fdfdfc;
+}
+.dish__meta{
+  display:flex;flex-wrap:wrap;gap:8px 14px;margin:12px 0 0;
+  font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--ink-text-2);
+}
+.dish__meta span{display:flex;align-items:center;gap:6px}
+.dish__meta i{font-style:normal;color:var(--tomato)}
+.quote{
+  margin:26px 0 0;padding-left:18px;border-left:2px solid var(--ink-rule);
+  font-family:var(--serif);font-size:clamp(16px,1.7vw,19px);line-height:1.95;color:#e6e5e1;
+}
+
+/* ---------------- 随机一道 ---------------- */
+.draw{display:grid;grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr);gap:clamp(30px,5vw,68px);align-items:center}
+@media (max-width:900px){.draw{grid-template-columns:1fr;gap:34px}}
+.deck{
+  position:relative;width:min(430px,100%);margin:0 auto;padding:10px;
+  background:#fffefa;border:1px solid var(--rule);border-radius:3px;
+  transform:rotate(-1.1deg);
+  box-shadow:0 2px 0 rgba(33,32,28,.05),0 30px 54px -42px rgba(33,32,28,.7);
+  transition:transform .3s var(--ease);
+}
+.deck:hover{transform:rotate(-.4deg)}
+.deck__frame{position:relative;aspect-ratio:4/3;overflow:hidden;border-radius:2px;background:var(--sand-3)}
+.deck__frame img{
+  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+  opacity:0;transform:scale(1.05);transition:opacity .38s ease,transform .6s var(--ease);
+}
+.deck__frame img.on{opacity:1;transform:scale(1)}
+.deck__stamp{
+  position:absolute;right:14px;bottom:14px;z-index:2;
+  display:grid;place-items:center;width:86px;height:86px;
+  border:3px solid var(--tomato-text);border-radius:7px;color:var(--tomato-text);
+  font-family:var(--serif);font-size:31px;font-weight:700;line-height:1;
+  transform:rotate(-10deg) scale(.5);opacity:0;
+  transition:transform .32s cubic-bezier(.2,1.5,.3,1),opacity .2s ease;
+  background-image:repeating-linear-gradient(46deg,rgba(195,58,24,.1) 0 1px,transparent 1px 3px);
+  pointer-events:none;
+}
+.deck__stamp.on{transform:rotate(-10deg) scale(1);opacity:.94}
+.draw__meta{
+  margin:18px 0 0;min-height:2.6em;font-family:var(--mono);font-size:12px;
+  line-height:1.7;letter-spacing:.02em;color:var(--ink-2);
+}
+.draw__meta b{color:var(--ink);font-weight:600}
+.draw__actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+
+/* ---------------- 归属 / 三件小事 ---------------- */
+.facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:clamp(32px,5vw,56px)}
+.facts>div{padding:22px clamp(16px,2.4vw,34px) 0 0;border-top:1px solid var(--rule)}
+.facts>div+div{padding-left:clamp(16px,2.4vw,34px)}
+.facts h3{margin:0;font-size:16.5px;font-weight:600}
+.facts p{margin:8px 0 0;font-size:14.5px;line-height:1.8;color:var(--ink-2)}
+@media (max-width:820px){
+  .facts{grid-template-columns:1fr}
+  .facts>div{padding:22px 0 0}
+  .facts>div+div{padding-left:0}
+}
+
+/* ---------------- 常见问题 ---------------- */
+.faq{margin-top:clamp(26px,4vw,44px);border-top:1px solid var(--rule)}
+.faq details{border-bottom:1px solid var(--rule)}
+.faq summary{
+  display:flex;align-items:center;justify-content:space-between;gap:18px;
+  padding:20px 0;cursor:pointer;list-style:none;
+  font-size:16.5px;font-weight:600;line-height:1.5;
+}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{
+  content:'+';flex:none;font-family:var(--mono);font-size:19px;font-weight:400;
+  color:var(--ink-2);transition:transform .24s var(--ease);
+}
+.faq details[open] summary::after{content:'−'}
+.faq p{margin:0 0 22px;max-width:46em;font-size:15.5px;line-height:1.85;color:var(--ink-2)}
+
+/* ---------------- 页脚 ---------------- */
+.foot{position:relative;background:var(--ink);color:var(--ink-text);padding:clamp(60px,9vw,112px) 0 0;overflow:hidden}
+.foot::before{
+  content:'';position:absolute;inset:0;opacity:.05;pointer-events:none;
+  background-image:repeating-linear-gradient(to bottom,transparent 0 47px,rgba(255,255,255,.5) 47px 48px);
+  -webkit-mask-image:linear-gradient(to bottom,#000,transparent 85%);
+  mask-image:linear-gradient(to bottom,#000,transparent 85%);
+}
+.foot__cta{
+  position:relative;display:grid;grid-template-columns:minmax(0,1.25fr) auto;
+  gap:clamp(30px,5vw,64px);align-items:center;
+}
+.foot__title{
+  margin:12px 0 0;font-family:var(--serif);font-weight:700;
+  font-size:clamp(34px,5.2vw,62px);line-height:1.06;letter-spacing:-.015em;color:#fdfdfc;
+}
+.foot__sub{margin:18px 0 0;max-width:26em;font-size:16px;line-height:1.85;color:var(--ink-text-2)}
+.foot__actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}
+.btn--ghost{border-color:var(--ink-rule);color:var(--ink-text);background:transparent}
+.btn--ghost:hover{background:#222221;border-color:#62605b}
+.qr{
+  position:relative;width:196px;padding:14px 14px 12px;background:var(--paper);
+  border-radius:6px;text-align:center;color:var(--ink);
+}
+@media (max-width:820px){
+  .foot__cta{grid-template-columns:1fr;gap:32px}
+  .qr{width:100%;max-width:236px;margin:0 auto}
+}
+.qr__slot{
+  display:grid;place-items:center;aspect-ratio:1;padding:12px;
+  border:1px dashed var(--rule-strong);border-radius:3px;
+  font-family:var(--mono);font-size:9px;line-height:1.7;color:var(--ink-2);
+}
+.qr__slot img{width:100%;height:100%;object-fit:contain}
+.qr__slot--filled{border-style:solid;border-color:var(--rule);padding:0}
+.qr__cap{margin:10px 0 0;font-size:13px;font-weight:600}
+.foot__rule{
+  position:relative;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px 24px;
+  margin-top:clamp(44px,7vw,80px);padding:20px 0 28px;border-top:1px solid var(--ink-rule);
+  font-family:var(--mono);font-size:10px;letter-spacing:.05em;color:#82827c;
+}
+.foot__rule a{display:inline-block;padding:8px 0;text-decoration:none;border-bottom:1px solid transparent}
+.foot__rule a:hover{color:var(--ink-text);border-bottom-color:#62605b}
+.foot__legal{display:flex;flex-wrap:wrap;gap:8px 18px}
+
+/* ---------------- 入场动画 ---------------- */
+[data-reveal]{
+  opacity:0;transform:translateY(16px);
+  transition:opacity .75s var(--ease),transform .75s var(--ease);
+  transition-delay:calc(var(--i,0)*70ms);
+}
+[data-reveal].in{opacity:1;transform:none}
+@media (prefers-reduced-motion:reduce){
+  [data-reveal]{opacity:1;transform:none;transition:none}
+  .display em{animation:none;background-size:100% .46em}
+  .deck,.deck:hover{transform:none}
+  .deck__stamp{transition:none}
+  .deck__frame img{transition:opacity .1s linear,transform .1s linear}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<!-- ===================== 顶栏 ===================== -->
+<header class="masthead">
+  <div class="wrap masthead__in">
+    <a class="brand" href="#top">
+      <span class="brand__seal" aria-hidden="true">记</span>
+      X师傅美食记
+    </a>
+    <nav class="nav" aria-label="页面导航">
+      <a href="#wall">这面墙</a>
+      <a href="#compose">怎么记</a>
+      <a href="#dish">一道菜</a>
+      <a href="#faq">常见问题</a>
+    </nav>
+    <a class="btn btn--primary btn--sm" href="#open">打开小程序</a>
+  </div>
+  <div class="progress" aria-hidden="true"></div>
+</header>
+
+<main id="main">
+
+  <!-- ===================== 首屏 ===================== -->
+  <section class="hero" id="top">
+    <div class="hero__rule" aria-hidden="true"></div>
+    <div class="wrap">
+      <div class="hero__grid">
+        <div class="hero__copy">
+          <p class="eyebrow" data-reveal style="--i:0">
+            <span class="eyebrow__dot" aria-hidden="true"></span>
+            微信小程序，网页版也能用
+          </p>
+          <h1 class="display" data-reveal style="--i:1">值得记住的<br><em>一顿饭</em>。</h1>
+          <p class="lede" data-reveal style="--i:2">
+            吃过的每一样，拍张照片、写句话，连<b>店家、城市、几分</b>一起记下。往后翻，每顿都在。
+          </p>
+          <div class="cta-row" data-reveal style="--i:3">
+            <a class="btn btn--primary" href="#open">打开小程序</a>
+            <a class="btn btn--quiet" href="#wall">看看这面墙</a>
+          </div>
+          <p class="micro" data-reveal style="--i:4">微信登录，无需注册</p>
+        </div>
+
+        <div class="collage-wrap">
+          <div class="collage" data-reveal style="--i:2">
+            <figure style="--r:-1.6deg">
+              <img src="img/tiantianmian.jpg" width="600" height="400" alt="甜水面，成都马旺子川小馆" fetchpriority="high">
+              <figcaption><b>甜水面</b> 10/09</figcaption>
+            </figure>
+            <div class="slip">
+              <p class="slip__t">甜水面</p>
+              <p class="slip__n">面条筋道，甜辣刚好。<br>辣子是现舂的，香得不像话。</p>
+              <div class="slip__m"><span>马旺子川小馆</span><span>★★★★★</span></div>
+            </div>
+            <figure class="tape" style="--r:1.2deg">
+              <img src="img/bingfen.jpg" width="600" height="900" alt="冰粉，成都马旺子川小馆">
+              <figcaption><b>冰粉</b> 10/09</figcaption>
+            </figure>
+            <figure style="--r:-.8deg">
+              <img src="img/kaoya.jpg" width="600" height="480" alt="北京烤鸭，四季民福">
+              <figcaption><b>北京烤鸭</b> 09/30</figcaption>
+            </figure>
+            <figure class="tape" style="--r:1.8deg">
+              <img src="img/tangyoubaba.jpg" width="600" height="725" alt="糖油粑粑，长沙金记">
+              <figcaption><b>糖油粑粑</b> 08/08</figcaption>
+            </figure>
+            <figure style="--r:.6deg">
+              <img src="img/shachamian.jpg" width="600" height="400" alt="沙茶面，厦门月华沙茶面">
+              <figcaption><b>沙茶面</b> 07/25</figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+
+      <div class="strip" data-reveal style="--i:1">
+        <div class="strip__item"><b>12</b><span>张照片</span></div>
+        <div class="strip__item"><b>7</b><span>座城市</span></div>
+        <div class="strip__item"><b>10</b><span>家店</span></div>
+        <div class="strip__item"><b>4.4</b><span>均分</span></div>
+        <p class="strip__note">示例数据</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 这面墙 ===================== -->
+  <section class="band band--sub" id="wall">
+    <div class="wrap">
+      <header class="sec-head" data-reveal>
+        <p class="eyebrow">01 / 这面墙</p>
+        <h2 class="title">一屏就是一整面墙。</h2>
+        <p class="sub">
+          按照片排，不按列表。日期、城市、统计都在原地展开，不跳页。
+        </p>
+      </header>
+
+      <div class="split">
+        <div class="phone-stage" data-reveal style="--i:1">
+          <figure class="phone" aria-label="照片墙截图">
+            <div class="phone__screen">
+              <img src="img/app-wall.jpg" width="780" height="1688" loading="lazy"
+                   alt="照片墙：顶栏是「X师傅美食记」与日期、城市、统计三个开关，下面是不等宽的菜品照片，每张左下角写着菜名与店名，底部是「随机一道」和「贴一张」">
+            </div>
+          </figure>
+        </div>
+
+        <ul class="points" data-reveal style="--i:2">
+          <li>
+            <span class="points__num">01</span>
+            <div>
+              <h3>「日期」一点，墙就按月分段</h3>
+              <p>十月 2026 有 5 张，九月 2026 有 4 张，每段自带小标题；右侧月份轴可以直接跳到更早的月份。</p>
+            </div>
+          </li>
+          <li>
+            <span class="points__num">02</span>
+            <div>
+              <h3>「城市」先选省，再选市</h3>
+              <p>每个城市后面标着条数。没写城市的记录归在「未记」里。</p>
+            </div>
+          </li>
+          <li>
+            <span class="points__num">03</span>
+            <div>
+              <h3>统计是六行字，不是一张图表</h3>
+              <p>拍过的、五分、去过、吃过、均分、反复吃。六行数字从底部升起，看完收起。</p>
+            </div>
+          </li>
+          <li>
+            <span class="points__num">04</span>
+            <div>
+              <h3>一条记录最多五张照片</h3>
+              <p>墙上每次随机挑一张当主图。翻到底会显示总数。</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 怎么记 ===================== -->
+  <section class="band" id="compose">
+    <div class="wrap">
+      <header class="sec-head" data-reveal>
+        <p class="eyebrow">02 / 怎么记</p>
+        <h2 class="title">记一顿饭，只要一句。</h2>
+      </header>
+
+      <div class="split split--rev">
+        <ul class="points" data-reveal style="--i:1">
+          <li>
+            <span class="points__num">01</span>
+            <div>
+              <h3>只有「这一口」必填</h3>
+              <p>菜名空着会提示。店名、城市、分数、备注都能空着，一个人在家煮的面也照样记。</p>
+            </div>
+          </li>
+          <li>
+            <span class="points__num">02</span>
+            <div>
+              <h3>照片至多五张，不选也行</h3>
+              <p>不选照片就用默认配图，墙上每次随机挑一张当主图。</p>
+            </div>
+          </li>
+          <li>
+            <span class="points__num">03</span>
+            <div>
+              <h3>几分意，一颗一颗点</h3>
+              <p>五颗圈，一到五分；再点同一颗可以取消。不评也不影响平均分。</p>
+            </div>
+          </li>
+          <li>
+            <span class="points__num">04</span>
+            <div>
+              <h3>哪一家、在哪座城</h3>
+              <p>店名手写，城市按省、市两级选，没记就空着。同一家店吃过的几次会归到这家店下。</p>
+            </div>
+          </li>
+        </ul>
+
+        <div class="phone-stage" data-reveal style="--i:2">
+          <figure class="phone" aria-label="贴一张的填写页截图">
+            <div class="phone__screen">
+              <img src="img/app-compose.jpg" width="780" height="1688" loading="lazy"
+                   alt="填写页：这一口、贴上照片、几分意、何时、哪一家、在哪座城、想记两句，底部是「贴上去」按钮">
+            </div>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 一道菜 ===================== -->
+  <section class="band band--ink" id="dish">
+    <div class="wrap">
+      <header class="sec-head" data-reveal>
+        <p class="eyebrow">03 / 一道菜</p>
+        <h2 class="title">点进去，是这一道菜。</h2>
+      </header>
+      <div class="dish" style="margin-top:clamp(30px,4vw,52px)">
+        <figure class="dish__photo" data-reveal style="--i:1">
+          <img src="img/tiantianmian.jpg" width="600" height="400" alt="甜水面，红油与芝麻酱拌开的面条" loading="lazy">
+          <figcaption class="dish__cap"><span>2026-10-09 12:30</span><span>不裁切</span></figcaption>
+        </figure>
+        <div data-reveal style="--i:2">
+          <h3 class="dish__name">甜水面</h3>
+          <p class="dish__meta">
+            <span>马旺子川小馆</span>
+            <span>成都 锦江区</span>
+            <span><i>★★★★★</i></span>
+          </p>
+          <blockquote class="quote">
+            面条筋道，甜辣刚好。<br>
+            辣子是现舂的，香得不像话。
+          </blockquote>
+
+          <ul class="points" style="margin-top:26px">
+            <li>
+              <span class="points__num">01</span>
+              <div>
+                <h3>照片按原比例显示</h3>
+                <p>深色底，竖图横图都完整显示，不为排整齐裁边。</p>
+              </div>
+            </li>
+            <li>
+              <span class="points__num">02</span>
+              <div>
+                <h3>删错了，五秒内能撤销</h3>
+                <p>删除后底部出现撤销条，五秒内可以恢复。</p>
+              </div>
+            </li>
+            <li>
+              <span class="points__num">03</span>
+              <div>
+                <h3>单独分享这一道菜</h3>
+                <p>分享这条记录的卡片给微信好友，也可以分享整面墙。</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 随机一道 ===================== -->
+  <section class="band" id="draw">
+    <div class="wrap">
+      <div class="draw">
+        <div data-reveal style="--i:1">
+          <div class="deck">
+            <div class="deck__frame">
+              <img src="img/tiantianmian.jpg" width="600" height="400" alt="甜水面" class="on" data-layer="a">
+              <img src="img/tiantianmian.jpg" width="600" height="400" alt="" data-layer="b">
+              <span class="deck__stamp" aria-hidden="true">今天</span>
+            </div>
+          </div>
+        </div>
+
+        <div data-reveal style="--i:2">
+          <p class="eyebrow">04 / 不知道吃什么</p>
+          <h2 class="title">翻出来一张，就是它了。</h2>
+          <p class="sub">
+            从吃过的里面随机抽一道，不满意就换一道。
+          </p>
+          <p class="draw__meta" id="drawMeta" aria-live="polite">
+            <b>甜水面</b><br>马旺子川小馆，成都 ★★★★★
+          </p>
+          <div class="draw__actions">
+            <button class="btn btn--primary" type="button" id="drawAgain">换一个</button>
+            <button class="btn btn--quiet" type="button" id="drawPick">就它了</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 归属 ===================== -->
+  <section class="band band--sub" id="keep">
+    <div class="wrap">
+      <header class="sec-head" data-reveal>
+        <p class="eyebrow">05 / 这些记录归谁</p>
+        <h2 class="title">这些记录，只属于你。</h2>
+        <p class="sub">
+          没有公开广场，也没有排行榜。记录按账号分开保存，别人看不到你的。
+        </p>
+      </header>
+      <div class="facts">
+        <div data-reveal style="--i:1">
+          <h3>不是本地相册</h3>
+          <p>记录和照片保存在服务器上，清理微信缓存也不会丢。</p>
+        </div>
+        <div data-reveal style="--i:2">
+          <h3>换手机不丢</h3>
+          <p>用同一个微信号登录，记录原样回来。</p>
+        </div>
+        <div data-reveal style="--i:3">
+          <h3>小屏和大屏</h3>
+          <p>小程序随手记，网页版看得更舒展，数据是同一份。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== 常见问题 ===================== -->
+  <section class="band" id="faq">
+    <div class="wrap">
+      <header class="sec-head" data-reveal>
+        <p class="eyebrow">06 / 常见问题</p>
+        <h2 class="title">还有几个小问题。</h2>
+      </header>
+      <div class="faq" data-reveal>
+        <details open>
+          <summary>在哪里打开？要下载吗？</summary>
+          <p>不用下载。微信里搜一搜「<b>X师傅美食记</b>」，或者用手机浏览器打开网页版，同一个账号看到的是同一面墙。</p>
+        </details>
+        <details>
+          <summary>会不会有人看到我吃的东西？</summary>
+          <p>不会。记录按账号隔离，默认只有你自己看得见；想给朋友看的那一条，你可以主动分享出去。</p>
+        </details>
+        <details>
+          <summary>没写店名、没写城市的记录能存吗？</summary>
+          <p>能。只有菜名必填，店名、城市、分数、备注都可以空着，空着记为「未记」。</p>
+        </details>
+        <details>
+          <summary>能记几百顿吗？翻到后面会不会很慢？</summary>
+          <p>能。照片分批加载，翻到很后面也不卡；统计按全部记录计算。</p>
+        </details>
+        <details>
+          <summary>照片会被裁掉吗？</summary>
+          <p>墙上为了排整齐会裁；点开详情页按原比例完整显示。</p>
+        </details>
+        <details>
+          <summary>这个项目是开源的？</summary>
+          <p>是。前端、后端和接口文档在同一个仓库，Apache-2.0 协议。</p>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ===================== 页脚 / 行动区 ===================== -->
+<footer class="foot" id="open">
+  <div class="wrap">
+    <div class="foot__cta">
+      <div>
+        <h2 class="foot__title">今天这一顿，<br>值得记下。</h2>
+        <p class="foot__sub">
+          微信搜索「X师傅美食记」即可打开，不用注册。
+        </p>
+        <div class="foot__actions">
+          <button class="btn btn--ink" type="button" id="copyName">复制小程序名</button>
+          <a class="btn btn--ghost" href="#top">回到顶部</a>
+        </div>
+      </div>
+
+      <!-- 小程序码：把二维码存成 landing/assets/qr.png 即会自动替换这个占位框 -->
+      <div class="qr">
+        <div class="qr__slot" id="qrSlot">
+          小程序码
+        </div>
+        <p class="qr__cap">扫一扫，打开小程序</p>
+      </div>
+    </div>
+
+    <div class="foot__rule">
+      <span class="foot__legal">
+        <span>© <span id="year">2026</span> X师傅美食记</span>
+        <span>Apache-2.0 协议</span>
+      </span>
+      <a href="#top">TOP</a>
+    </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- 入场 ---------- */
+  var revealEls = document.querySelectorAll('[data-reveal]');
+  if (reduce || !('IntersectionObserver' in window)) {
+    Array.prototype.forEach.call(revealEls, function (el) { el.classList.add('in'); });
+  } else {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.1 });
+    Array.prototype.forEach.call(revealEls, function (el) { io.observe(el); });
+  }
+
+  /* ---------- 顶栏进度线 ---------- */
+  var bar = document.querySelector('.progress');
+  var ticking = false;
+  function paintProgress() {
+    var doc = document.documentElement;
+    var max = doc.scrollHeight - doc.clientHeight;
+    var ratio = max > 0 ? Math.min(doc.scrollTop / max, 1) : 0;
+    bar.style.transform = 'scaleX(' + ratio + ')';
+    ticking = false;
+  }
+  window.addEventListener('scroll', function () {
+    if (!ticking) { ticking = true; window.requestAnimationFrame(paintProgress); }
+  }, { passive: true });
+  paintProgress();
+
+  /* ---------- 年份 ---------- */
+  document.getElementById('year').textContent = String(new Date().getFullYear());
+
+
+  /* ---------- 复制小程序名：网页里唤起不了微信，就把名字送进剪贴板 ---------- */
+  var copyBtn = document.getElementById('copyName');
+  var copyText = 'X师傅美食记';
+  var resetTimer = 0;
+  function doneCopy() {
+    copyBtn.textContent = '已复制';
+    window.clearTimeout(resetTimer);
+    resetTimer = window.setTimeout(function () { copyBtn.textContent = '复制小程序名'; }, 1800);
+  }
+  function copyFallback() {
+    var ta = document.createElement('textarea');
+    ta.value = copyText;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    if (ok) doneCopy();
+  }
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function () {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(copyText).then(doneCopy, copyFallback);
+      } else {
+        copyFallback();
+      }
+    });
+  }
+  /* ---------- 小程序码：有文件才显示，否则保留占位，不伪造 ---------- */
+  var slot = document.getElementById('qrSlot');
+  var qr = new Image();
+  qr.onload = function () {
+    slot.innerHTML = '';
+    slot.appendChild(qr);
+    slot.classList.add('qr__slot--filled');
+  };
+  qr.alt = 'X师傅美食记 小程序码';
+  qr.src = 'assets/qr.png';
+
+  /* ---------- 随机一道 ---------- */
+  var dishes = [
+    { src: 'img/tiantianmian.jpg', eat: '甜水面',   shop: '马旺子川小馆',   city: '成都', stars: 5 },
+    { src: 'img/bingfen.jpg',      eat: '冰粉',     shop: '马旺子川小馆',   city: '成都', stars: 4 },
+    { src: 'img/kaoya.jpg',        eat: '北京烤鸭', shop: '四季民福',       city: '北京', stars: 5 },
+    { src: 'img/shengjianbao.jpg', eat: '生煎包',   shop: '大壶春',         city: '上海', stars: 5 },
+    { src: 'img/danhonggao.jpg',   eat: '蛋烘糕',   shop: '贺记蛋烘糕',     city: '成都', stars: 3 },
+    { src: 'img/douzhier.jpg',     eat: '豆汁儿',   shop: '尹三豆汁',       city: '北京', stars: 3 },
+    { src: 'img/reganmian.jpg',    eat: '热干面',   shop: '蔡林记',         city: '武汉', stars: 5 },
+    { src: 'img/shachamian.jpg',   eat: '沙茶面',   shop: '月华沙茶面',     city: '厦门', stars: 5 },
+    { src: 'img/qiaojiaoniurou.jpg', eat: '跷脚牛肉', shop: '古市香跷脚牛肉', city: '乐山', stars: 5 },
+    { src: 'img/boboboji.jpg',     eat: '钵钵鸡',   shop: '叶婆婆钵钵鸡',   city: '乐山', stars: 4 },
+    { src: 'img/tangyoubaba.jpg',  eat: '糖油粑粑', shop: '金记糖油粑粑',   city: '长沙', stars: 5 },
+    { src: 'img/fanqieniunan.jpg', eat: '番茄牛腩', shop: '没记店名',       city: '未记', stars: 4 }
+  ];
+
+  var layers = document.querySelectorAll('.deck__frame img');
+  var meta = document.getElementById('drawMeta');
+  var stamp = document.querySelector('.deck__stamp');
+  var again = document.getElementById('drawAgain');
+  var pick = document.getElementById('drawPick');
+  var current = 0;
+  var front = 0; /* 当前可见层索引 */
+  var stampTimer = 0;
+
+  function stars(n) {
+    var out = '';
+    for (var i = 0; i < 5; i++) { out += i < n ? '★' : '☆'; }
+    return out;
+  }
+
+  function paint(index) {
+    current = index;
+    var d = dishes[index];
+    var back = 1 - front;
+    var img = layers[back];
+    img.src = d.src;
+    img.alt = d.eat + '，' + d.shop;
+    layers[front].classList.remove('on');
+    img.classList.add('on');
+    front = back;
+
+    meta.innerHTML = '';
+    var name = document.createElement('b');
+    name.textContent = d.eat;
+    meta.appendChild(name);
+    meta.appendChild(document.createElement('br'));
+    meta.appendChild(document.createTextNode(d.shop + '，' + d.city + ' ' + stars(d.stars)));
+
+    stamp.classList.remove('on');
+    window.clearTimeout(stampTimer);
+  }
+
+  again.addEventListener('click', function () {
+    var next = current;
+    while (next === current) { next = Math.floor(Math.random() * dishes.length); }
+    paint(next);
+  });
+
+  pick.addEventListener('click', function () {
+    stamp.classList.add('on');
+    window.clearTimeout(stampTimer);
+    stampTimer = window.setTimeout(function () { stamp.classList.remove('on'); }, 1400);
+  });
+})();
+</script>
+</body>
+</html>
