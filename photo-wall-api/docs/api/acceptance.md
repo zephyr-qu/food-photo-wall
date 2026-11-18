@@ -1,7 +1,7 @@
 # 照片墙接口 · 验收用例（v1.1）
 
 > 配套 [photo-wall-api.md](./photo-wall-api.md) 与 [openapi.yaml](./openapi.yaml)。
-> 共 38 条用例（AC-01 ~ AC-38）；提测前至少跑完 P0 组（AC-01 ~ AC-20）。
+> 共 39 条用例（AC-01 ~ AC-38，其中 AC-30b 是 AC-30 的补充用例）；提测前至少跑完 P0 组（AC-01 ~ AC-20）。
 
 约定：
 - `{BASE}` = 环境 base url（如 `https://dev-api.xshifu.example.com/v1`）。
